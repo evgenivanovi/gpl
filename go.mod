@@ -1,6 +1,6 @@
 module github.com/evgenivanovi/gpl
 
-go 1.21
+go 1.21.3
 
 require (
 	github.com/georgysavva/scany/v2 v2.0.0
