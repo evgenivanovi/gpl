@@ -9,8 +9,8 @@ import (
 /* __________________________________________________ */
 
 type Application struct {
-	ServerOpts ServerSettings
-	Context    map[string]any
+	Settings ServerSettings
+	Context  map[string]any
 
 	onStartExec           xsync.Executor
 	onStartBackgroundExec xsync.Executor
@@ -22,7 +22,7 @@ type Application struct {
 
 func NewApplication() *Application {
 	return &Application{
-		Context: make(map[string]any, 0),
+		Context: make(map[string]any),
 
 		onStartExec:           xsync.NewParallelExecutor(),
 		onStartBackgroundExec: xsync.NewParallelExecutor(),

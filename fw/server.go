@@ -1,26 +1,19 @@
 package fw
 
 import (
-	"context"
-	"errors"
-	"log/slog"
-	"net/http"
-	"os"
-	"os/signal"
+	"crypto/tls"
 	"strconv"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/evgenivanovi/gpl/std"
-	slogx "github.com/evgenivanovi/gpl/stdx/log/slog"
 	"github.com/gookit/goutil/strutil"
 )
 
 /* __________________________________________________ */
 
 const ServerDefaultHost = "localhost"
-const ServerDefaultPort = 80
+const ServerDefaultHTTPPort = 80
+const ServerDefaultHTTPSPort = 443
 
 /* __________________________________________________ */
 
@@ -46,16 +39,45 @@ func (o ServerOp) And(ops ...ServerOp) ServerOp {
 
 type ServerSettings struct {
 	host string
-	port int
+
+	httpPort    int
+	httpEnabled bool
+
+	httpsPort    int
+	httpsEnabled bool
+
+	tls *TLS
 }
 
-func (op ServerSettings) Address() string {
+/* __________________________________________________ */
+
+func (op ServerSettings) HttpEnabled() bool {
+	return op.httpEnabled
+}
+
+func (op ServerSettings) HttpsEnabled() bool {
+	return op.httpsEnabled
+}
+
+/* __________________________________________________ */
+
+func (op ServerSettings) HttpAddress() string {
 	result := strings.Builder{}
 	result.WriteString(op.host)
 	result.WriteString(std.Colon)
-	result.WriteString(strconv.Itoa(op.port))
+	result.WriteString(strconv.Itoa(op.httpPort))
 	return result.String()
 }
+
+func (op ServerSettings) HttpsAddress() string {
+	result := strings.Builder{}
+	result.WriteString(op.host)
+	result.WriteString(std.Colon)
+	result.WriteString(strconv.Itoa(op.httpsPort))
+	return result.String()
+}
+
+/* __________________________________________________ */
 
 func WithHost(host string) ServerOp {
 	return func(opts *ServerSettings) {
@@ -67,133 +89,229 @@ func WithHostFn(fn func() string) ServerOp {
 	return WithHost(fn())
 }
 
-func WithPort(port int) ServerOp {
+/* __________________________________________________ */
+
+func WithHttp(enabled bool) ServerOp {
 	return func(opts *ServerSettings) {
-		opts.port = port
+		opts.httpEnabled = enabled
 	}
 }
 
-func WithPortFn(fn func() int) ServerOp {
-	return WithPort(fn())
-}
-
-func WithAddress(address string) ServerOp {
-	array := strings.Split(address, std.Colon)
-	host := array[0]
-	port, _ := strutil.ToInt(array[1])
-	return WithHost(host).Join(WithPort(port))
-}
-
-func WithAddressFn(fn func() string) ServerOp {
-	return WithAddress(fn())
-}
-
-func NewServerOpts(opts ...ServerOp) *ServerSettings {
-	opt := defaultServerOpts()
-	for _, fn := range opts {
-		fn(&opt)
+func WithHttpEnabled() ServerOp {
+	return func(opts *ServerSettings) {
+		opts.httpEnabled = true
 	}
-	return &opt
 }
 
-func defaultServerOpts() ServerSettings {
-	return ServerSettings{
-		host: ServerDefaultHost,
-		port: ServerDefaultPort,
+func WithHttps(enabled bool) ServerOp {
+	return func(opts *ServerSettings) {
+		opts.httpsEnabled = enabled
+	}
+}
+
+func WithHttpsEnabled() ServerOp {
+	return func(opts *ServerSettings) {
+		opts.httpsEnabled = true
 	}
 }
 
 /* __________________________________________________ */
 
-// ConfigureServer
-// When we receive a SIGINT or SIGTERM signal,
-// we instruct our server to stop accepting any new HTTP requests,
-// and give any in-flight requests a ‘grace period’ to complete before the application is terminated.
-func ConfigureServer(
-	application *Application,
-	handler http.Handler,
-) error {
-
-	server := &http.Server{
-		Addr:    application.ServerOpts.Address(),
-		Handler: handler,
-	}
-
-	// Create a shutdownError channel.
-	// We will use this to receive any errors returned by the graceful Shutdown() function.
-	shutdownErrorChannel := make(chan error)
-
-	// Start a background goroutine.
-	go func() {
-
-		// Create a quitChannel channel which carries os.Signal values.
-		quitChannel := make(chan os.Signal, 1)
-
-		// Use signal.Notify() to listen for incoming SIGINT and SIGTERM signals and
-		// relay them to the quitChannel channel.
-		// Any other signals will not be caught by signal.Notify() and
-		// will retain their default behavior.
-		signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
-
-		// Read the signal from the quitChannel channel.
-		// This code will block until a signal is received.
-		sig := <-quitChannel
-
-		// Log a message to say that the signal has been caught.
-		// Notice that we also call the String() method on the signal to get the signal name and
-		// include it in the log entry properties.
-		slogx.Log().Debug(
-			"Caught OS signal.",
-			slog.String("signal", sig.String()),
-		)
-
-		slogx.Log().Debug(
-			"Shutting down server",
-			slog.String("signal", sig.String()),
-		)
-
-		// Create a context with a timeout.
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		// Call Shutdown() on our server, passing in the context we just made.
-		// Shutdown() will return nil if the graceful executor was successful, or an
-		// error (which may happen because of a problem closing the listeners, or
-		// because the executor didn't complete before the context deadline is hit).
-		// We relay this return value to the shutdownError channel.
-		err := server.Shutdown(ctx)
+func WithStringHttpPort(port string) ServerOp {
+	return func(opts *ServerSettings) {
+		p, err := strutil.ToInt(port)
 		if err != nil {
-			shutdownErrorChannel <- err
+			panic(err)
 		}
+		opts.httpPort = p
+	}
+}
 
-		slogx.Log().Debug("Completing tasks")
-		application.Close()
+func WithHttpPort(port int) ServerOp {
+	return func(opts *ServerSettings) {
+		opts.httpPort = port
+	}
+}
 
-		// Then we return nil on the shutdownError channel,
-		// to indicate that the executor was completed without any issues.
-		shutdownErrorChannel <- nil
+func WithHttpPortFn(fn func() int) ServerOp {
+	return WithHttpPort(fn())
+}
 
-	}()
+/* __________________________________________________ */
 
-	application.Start()
+func WithStringHttpsPort(port string) ServerOp {
+	return func(opts *ServerSettings) {
+		p, err := strutil.ToInt(port)
+		if err != nil {
+			panic(err)
+		}
+		opts.httpsPort = p
+	}
+}
 
-	// Calling Shutdown() on our server will cause ListenAndServe() to immediately return a http.ErrServerClosed error.
-	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
-	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
-	err := server.ListenAndServe()
-	if !errors.Is(err, http.ErrServerClosed) {
-		return err
+func WithHttpsPort(port int) ServerOp {
+	return func(opts *ServerSettings) {
+		opts.httpsPort = port
+	}
+}
+
+func WithHttpsPortFn(fn func() int) ServerOp {
+	return WithHttpsPort(fn())
+}
+
+/* __________________________________________________ */
+
+func WithHttpAddress(address string) ServerOp {
+	host, port, found := strings.Cut(address, std.Colon)
+	if !found {
+		return WithHost(address)
+	}
+	return WithHost(host).Join(WithStringHttpPort(port))
+}
+
+func WithHttpAddressFn(fn func() string) ServerOp {
+	return WithHttpAddress(fn())
+}
+
+/* __________________________________________________ */
+
+func WithHttpsAddress(address string) ServerOp {
+	host, port, found := strings.Cut(address, std.Colon)
+	if !found {
+		return WithHost(address)
+	}
+	return WithHost(host).Join(WithStringHttpsPort(port))
+}
+
+func WithHttpsAddressFn(fn func() string) ServerOp {
+	return WithHttpsAddress(fn())
+}
+
+/* __________________________________________________ */
+
+func WithTLS(fn func() *TLS) ServerOp {
+	return func(opts *ServerSettings) {
+		opts.tls = fn()
+	}
+}
+
+/* __________________________________________________ */
+
+func NewServerSettings(opts ...ServerOp) *ServerSettings {
+	settings := defaultServerSettings()
+	for _, op := range opts {
+		op(&settings)
+	}
+	return &settings
+}
+
+func defaultServerSettings() ServerSettings {
+	return ServerSettings{
+		host: ServerDefaultHost,
+
+		httpPort:    ServerDefaultHTTPPort,
+		httpEnabled: false,
+
+		httpsPort:    ServerDefaultHTTPSPort,
+		httpsEnabled: false,
+
+		tls: NewTLS(),
+	}
+}
+
+/* __________________________________________________ */
+
+type TLSOp func(*TLS)
+
+func WithConfig(config *tls.Config) TLSOp {
+	return func(tls *TLS) {
+		if tls != nil {
+			tls.config = config
+		}
+	}
+}
+
+func WithCert(cert string) TLSOp {
+	return func(tls *TLS) {
+		if tls != nil {
+			tls.cert = cert
+		}
+	}
+}
+
+func WithKey(key string) TLSOp {
+	return func(tls *TLS) {
+		if tls != nil {
+			tls.key = key
+		}
+	}
+}
+
+func WithCertKey(cert, key string) TLSOp {
+	return func(tls *TLS) {
+		tls.cert = cert
+		tls.key = key
+	}
+}
+
+/* __________________________________________________ */
+
+type TLS struct {
+	config *tls.Config
+	cert   string
+	key    string
+}
+
+func (tls *TLS) Enabled() bool {
+	return tls.EnabledAutoTLS() || tls.EnabledNonAutoTLS()
+}
+
+func (tls *TLS) Disabled() bool {
+	return !tls.Enabled()
+}
+
+// EnabledAutoTLS
+// Filenames containing a certificate and matching private key for the
+// server must be provided if neither the Server's TLSConfig.Certificates
+// nor TLSConfig.GetCertificate are populated.
+func (tls *TLS) EnabledAutoTLS() bool {
+
+	if tls == nil || tls.config == nil {
+		return false
 	}
 
-	// Otherwise, we wait to receive the return value from Shutdown() on the shutdownError channel.
-	// If return value is an error, we know that there was a problem with the graceful executor, and we return the error.
-	err = <-shutdownErrorChannel
-	if err != nil {
-		return err
+	if len(tls.config.Certificates) == 0 || tls.config.GetCertificate == nil {
+		return false
 	}
 
-	// At this point, we know that the graceful executor completed successfully.
-	slogx.Log().Debug("Stopped server")
-	return nil
+	return strutil.IsBlank(tls.cert) && strutil.IsBlank(tls.key)
 
 }
+
+// EnabledNonAutoTLS
+// Filenames containing a certificate and matching private key for the
+// server must be provided if neither the Server's TLSConfig.Certificates
+// nor TLSConfig.GetCertificate are populated.
+func (tls *TLS) EnabledNonAutoTLS() bool {
+
+	if tls == nil || tls.config == nil {
+		return false
+	}
+
+	if len(tls.config.Certificates) != 0 || tls.config.GetCertificate != nil {
+		return false
+	}
+
+	return strutil.IsNotBlank(tls.cert) && strutil.IsNotBlank(tls.key)
+
+}
+
+func NewTLS(opts ...TLSOp) *TLS {
+	cfg := &TLS{}
+	for _, fn := range opts {
+		fn(cfg)
+	}
+	return cfg
+}
+
+/* __________________________________________________ */
