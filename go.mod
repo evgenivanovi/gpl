@@ -10,6 +10,10 @@ require (
 	github.com/gookit/goutil v0.6.14
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v5 v5.5.0
+	github.com/knadh/koanf/parsers/json v0.1.0
+	github.com/knadh/koanf/parsers/yaml v0.1.0
+	github.com/knadh/koanf/providers/file v0.1.0
+	github.com/knadh/koanf/v2 v2.0.1
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/pressly/goose v2.7.0+incompatible
@@ -54,11 +58,14 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nats-io/nats.go v1.31.0 // indirect
