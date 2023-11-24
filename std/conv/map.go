@@ -8,13 +8,12 @@ import (
 
 /* __________________________________________________ */
 
-type BoolMapper func(bool) string
+type FromBool func(bool) string
+type ToBool func(string) (bool, error)
 
 func BoolString(value bool) string {
 	return strconv.FormatBool(value)
 }
-
-type ToBoolMapper func(string) (bool, error)
 
 func MapBool(raw string) (bool, error) {
 	val, err := strconv.ParseBool(raw)
@@ -32,13 +31,12 @@ func MapBoolFunc() func(raw string) (bool, error) {
 
 /* __________________________________________________ */
 
-type IntMapper func(int) string
+type FromInt func(int) string
+type ToInt func(string) (int, error)
 
 func IntString(value int) string {
 	return strconv.FormatInt(int64(value), 10)
 }
-
-type ToIntMapper func(string) (int, error)
 
 func MapInt(raw string) (int, error) {
 	val, err := strconv.Atoi(raw)
@@ -56,13 +54,12 @@ func MapIntFunc() func(raw string) (int, error) {
 
 /* __________________________________________________ */
 
-type Int64Mapper func(int64) string
+type FromInt64 func(int64) string
+type ToInt64 func(string) (int64, error)
 
 func Int64String(value int64) string {
 	return strconv.FormatInt(value, 10)
 }
-
-type ToInt64Mapper func(string) (int64, error)
 
 func MapInt64(raw string) (int64, error) {
 	val, err := strconv.ParseInt(raw, 10, 64)
@@ -80,13 +77,12 @@ func MapInt64Func() func(raw string) (int64, error) {
 
 /* __________________________________________________ */
 
-type UintMapper func(uint) string
+type FromUint func(uint) string
+type ToUint func(string) (uint, error)
 
 func UintToString(value uint) string {
 	return strconv.FormatUint(uint64(value), 10)
 }
-
-type ToUintMapper func(string) (uint, error)
 
 func MapUint(raw string) (uint, error) {
 	val, err := strconv.ParseUint(raw, 10, 32)
@@ -104,13 +100,12 @@ func MapUintFunc() func(raw string) (uint, error) {
 
 /* __________________________________________________ */
 
-type Uint16Mapper func(uint16) string
+type FromUint16 func(uint16) string
+type ToUint16 func(string) (uint16, error)
 
 func Uint16ToString(value uint16) string {
 	return strconv.FormatUint(uint64(value), 10)
 }
-
-type ToUint16Mapper func(string) (uint16, error)
 
 func MapUint16(raw string) (uint16, error) {
 	val, err := strconv.ParseUint(raw, 10, 16)
@@ -128,13 +123,12 @@ func MapUint16Func() func(raw string) (uint16, error) {
 
 /* __________________________________________________ */
 
-type Uint64Mapper func(uint64) string
+type FromUint64 func(uint64) string
+type ToUint64 func(string) (uint64, error)
 
 func Uint64ToString(value uint64) string {
 	return strconv.FormatUint(value, 10)
 }
-
-type ToUint64Mapper func(string) (uint64, error)
 
 func MapUint64(raw string) (uint64, error) {
 	val, err := strconv.ParseUint(raw, 10, 64)
@@ -152,13 +146,12 @@ func MapUint64Func() func(raw string) (uint64, error) {
 
 /* __________________________________________________ */
 
-type Float64Mapper func(float64) string
+type FromFloat64 func(float64) string
+type ToFloat64 func(string) (float64, error)
 
 func Float64ToString(value float64) string {
 	return strconv.FormatFloat(value, 'f', -1, 64)
 }
-
-type ToFloat64Mapper func(string) (float64, error)
 
 func MapFloat64(raw string) (float64, error) {
 	val, err := strconv.ParseFloat(raw, 64)
@@ -176,13 +169,12 @@ func MapFloat64Func() func(raw string) (float64, error) {
 
 /* __________________________________________________ */
 
-type DurationMapper func(time.Duration) string
+type FromDuration func(time.Duration) string
+type ToDuration func(string) (time.Duration, error)
 
 func DurationToString(value time.Duration) string {
 	return value.String()
 }
-
-type ToDurationMapper func(string) (time.Duration, error)
 
 func MapDuration(raw string) (time.Duration, error) {
 	val, err := time.ParseDuration(raw)

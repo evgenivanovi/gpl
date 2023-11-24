@@ -1,4 +1,4 @@
-package http
+package mw
 
 import (
 	"compress/gzip"

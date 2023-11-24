@@ -13,7 +13,7 @@ func Luhn(value string) error {
 	for ind := len(value) - 1; ind >= 0; ind-- {
 		d := int(value[ind] - '0')
 		if alter {
-			d *= 2
+			d = d * 2
 		}
 		sum += d / 10
 		sum += d % 10

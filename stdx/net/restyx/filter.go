@@ -1,6 +1,9 @@
 package restyx
 
-import "github.com/go-resty/resty/v2"
+import (
+	"github.com/evgenivanovi/gpl/std"
+	"github.com/go-resty/resty/v2"
+)
 
 /* __________________________________________________ */
 
@@ -12,7 +15,7 @@ func StatusFilter(status int) func(response *resty.Response) bool {
 
 func HeaderFilter(header string) func(response *resty.Response) bool {
 	return func(response *resty.Response) bool {
-		return response.Header().Get(header) != ""
+		return response.Header().Get(header) != std.Empty
 	}
 }
 

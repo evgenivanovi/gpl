@@ -8,9 +8,18 @@ import (
 
 /* __________________________________________________ */
 
-func Join(first string, second ...string) string {
+func Join(first string, others ...string) string {
 	result := first
-	for _, val := range second {
+	for _, val := range others {
+		result += val
+	}
+	return result
+}
+
+func JoinWithSep(first string, sep string, others ...string) string {
+	result := first
+	for _, val := range others {
+		result += sep
 		result += val
 	}
 	return result

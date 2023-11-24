@@ -1,4 +1,4 @@
-package http
+package mw
 
 import (
 	"net/http"
@@ -57,16 +57,16 @@ func WithLogging(handler http.Handler) http.Handler {
 			size:   0,
 		}
 
-		lw := loggingResponseWriter{
+		lrw := loggingResponseWriter{
 			ResponseWriter: writer,
 			responseData:   responseData,
 		}
 
-		handler.ServeHTTP(&lw, request)
+		handler.ServeHTTP(&lrw, request)
 
 		duration := time.Since(start)
 
-		slogx.Log().Debug(
+		slogx.FromCtx(request.Context()).Debug(
 			"Processed HTTP request.",
 			RequestURIKey, request.RequestURI,
 			RequestMethodKey, request.Method,

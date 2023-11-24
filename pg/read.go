@@ -22,9 +22,9 @@ func ProvideReadRequester(pool *pgxpool.Pool) *ReadRequester {
 
 /* __________________________________________________ */
 
-// ExecuteOne
+// ExecOne
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) ExecuteOne(
+func (r *ReadRequester) ExecOne(
 	ctx context.Context,
 	dst any, query string, args ...any,
 ) error {
@@ -32,16 +32,16 @@ func (r *ReadRequester) ExecuteOne(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteOneTx(ctx, tx, dst, query, args...)
+		return r.doExecOneTx(ctx, tx, dst, query, args...)
 	} else {
-		return r.doExecuteOne(ctx, dst, query, args...)
+		return r.doExecOne(ctx, dst, query, args...)
 	}
 
 }
 
-// doExecuteOneTx
+// doExecOneTx
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteOneTx(
+func (r *ReadRequester) doExecOneTx(
 	ctx context.Context,
 	tx *pgxpool.Tx, dst any, query string, args ...any,
 ) error {
@@ -61,9 +61,9 @@ func (r *ReadRequester) doExecuteOneTx(
 
 }
 
-// ExecuteOne
+// ExecOne
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteOne(
+func (r *ReadRequester) doExecOne(
 	ctx context.Context,
 	dst any, query string, args ...any,
 ) error {
@@ -85,9 +85,9 @@ func (r *ReadRequester) doExecuteOne(
 
 /* __________________________________________________ */
 
-// ExecuteOneWithScan
+// ExecOneWithScan
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) ExecuteOneWithScan(
+func (r *ReadRequester) ExecOneWithScan(
 	ctx context.Context,
 	scan func(row pgx.Row) error, query string, args ...any,
 ) error {
@@ -95,16 +95,16 @@ func (r *ReadRequester) ExecuteOneWithScan(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteOneTxWithScan(ctx, tx, scan, query, args...)
+		return r.doExecOneTxWithScan(ctx, tx, scan, query, args...)
 	} else {
-		return r.doExecuteOneWithScan(ctx, scan, query, args...)
+		return r.doExecOneWithScan(ctx, scan, query, args...)
 	}
 
 }
 
-// doExecuteOneTx
+// doExecOneTx
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteOneTxWithScan(
+func (r *ReadRequester) doExecOneTxWithScan(
 	ctx context.Context,
 	tx *pgxpool.Tx, scan func(row pgx.Row) error, query string, args ...any,
 ) error {
@@ -120,9 +120,9 @@ func (r *ReadRequester) doExecuteOneTxWithScan(
 
 }
 
-// ExecuteOne
+// ExecOne
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteOneWithScan(
+func (r *ReadRequester) doExecOneWithScan(
 	ctx context.Context,
 	scan func(row pgx.Row) error, query string, args ...any,
 ) error {
@@ -140,9 +140,9 @@ func (r *ReadRequester) doExecuteOneWithScan(
 
 /* __________________________________________________ */
 
-// ExecuteMany
+// ExecMany
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) ExecuteMany(
+func (r *ReadRequester) ExecMany(
 	ctx context.Context,
 	dst any, query string, args ...any,
 ) error {
@@ -150,16 +150,16 @@ func (r *ReadRequester) ExecuteMany(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteManyTx(ctx, tx, dst, query, args...)
+		return r.doExecManyTx(ctx, tx, dst, query, args...)
 	} else {
-		return r.doExecuteMany(ctx, dst, query, args...)
+		return r.doExecMany(ctx, dst, query, args...)
 	}
 
 }
 
-// doExecuteManyTx
+// doExecManyTx
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteManyTx(
+func (r *ReadRequester) doExecManyTx(
 	ctx context.Context,
 	tx *pgxpool.Tx, dst any, query string, args ...any,
 ) error {
@@ -178,9 +178,9 @@ func (r *ReadRequester) doExecuteManyTx(
 
 }
 
-// doExecuteManyTx
+// doExecManyTx
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteMany(
+func (r *ReadRequester) doExecMany(
 	ctx context.Context,
 	dst any, query string, args ...any,
 ) error {
@@ -201,9 +201,9 @@ func (r *ReadRequester) doExecuteMany(
 
 /* __________________________________________________ */
 
-// ExecuteManyWithScan
+// ExecManyWithScan
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) ExecuteManyWithScan(
+func (r *ReadRequester) ExecManyWithScan(
 	ctx context.Context,
 	scan func(rows pgx.Rows) error, query string, args ...any,
 ) error {
@@ -211,16 +211,16 @@ func (r *ReadRequester) ExecuteManyWithScan(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteManyTxWithScan(ctx, tx, scan, query, args...)
+		return r.doExecManyTxWithScan(ctx, tx, scan, query, args...)
 	} else {
-		return r.doExecuteManyWithScan(ctx, scan, query, args...)
+		return r.doExecManyWithScan(ctx, scan, query, args...)
 	}
 
 }
 
-// doExecuteManyTxWithScan
+// doExecManyTxWithScan
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteManyTxWithScan(
+func (r *ReadRequester) doExecManyTxWithScan(
 	ctx context.Context,
 	tx *pgxpool.Tx, scan func(rows pgx.Rows) error, query string, args ...any,
 ) error {
@@ -244,9 +244,9 @@ func (r *ReadRequester) doExecuteManyTxWithScan(
 
 }
 
-// doExecuteManyWithScan
+// doExecManyWithScan
 // Arguments should be referenced positionally from the SQL string as $1, $2, etc.
-func (r *ReadRequester) doExecuteManyWithScan(
+func (r *ReadRequester) doExecManyWithScan(
 	ctx context.Context,
 	scan func(rows pgx.Rows) error, query string, args ...any,
 ) error {

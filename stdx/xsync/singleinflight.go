@@ -7,19 +7,19 @@ import (
 
 /* __________________________________________________ */
 
-type Once struct {
+type SingleInFlight struct {
 	mutex atomic.Value
 }
 
-func NewOnce() Once {
+func NewSingleInFlight() SingleInFlight {
 	var mutex atomic.Value
 	mutex.Store(new(sync.Once))
-	return Once{
+	return SingleInFlight{
 		mutex: mutex,
 	}
 }
 
-func (o *Once) Do(task func()) {
+func (o *SingleInFlight) Do(task func()) {
 	o.getOnce().Do(
 		func() {
 			task()
@@ -28,11 +28,11 @@ func (o *Once) Do(task func()) {
 	)
 }
 
-func (o *Once) getOnce() *sync.Once {
+func (o *SingleInFlight) getOnce() *sync.Once {
 	return o.mutex.Load().(*sync.Once)
 }
 
-func (o *Once) setOnce() {
+func (o *SingleInFlight) setOnce() {
 	o.mutex.Store(new(sync.Once))
 }
 

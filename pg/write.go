@@ -20,20 +20,20 @@ func ProvideWriteRequester(pool *pgxpool.Pool) *WriteRequester {
 
 /* __________________________________________________ */
 
-// ExecuteWithDefaultOnError
+// ExecWithDefaultOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) ExecuteWithDefaultOnError(
+func (r *WriteRequester) ExecWithDefaultOnError(
 	ctx context.Context,
 	command string, args ...any,
 ) error {
-	return r.ExecuteWithOnError(
+	return r.ExecWithOnError(
 		ctx, TranslateWriteErrorFunc(), command, args...,
 	)
 }
 
-// ExecuteWithOnError
+// ExecWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) ExecuteWithOnError(
+func (r *WriteRequester) ExecWithOnError(
 	ctx context.Context,
 	onError func(error) error,
 	command string, args ...any,
@@ -42,16 +42,16 @@ func (r *WriteRequester) ExecuteWithOnError(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteTxWithOnError(ctx, tx, onError, command, args...)
+		return r.doExecTxWithOnError(ctx, tx, onError, command, args...)
 	} else {
-		return r.doExecuteWithOnError(ctx, onError, command, args...)
+		return r.doExecWithOnError(ctx, onError, command, args...)
 	}
 
 }
 
-// doExecuteTxWithOnError
+// doExecTxWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) doExecuteTxWithOnError(
+func (r *WriteRequester) doExecTxWithOnError(
 	ctx context.Context,
 	tx *pgxpool.Tx,
 	onError func(error) error,
@@ -61,9 +61,9 @@ func (r *WriteRequester) doExecuteTxWithOnError(
 	return onError(err)
 }
 
-// doExecuteWithOnError
+// doExecWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) doExecuteWithOnError(
+func (r *WriteRequester) doExecWithOnError(
 	ctx context.Context,
 	onError func(error) error,
 	command string, args ...any,
@@ -74,20 +74,20 @@ func (r *WriteRequester) doExecuteWithOnError(
 
 /* __________________________________________________ */
 
-// ExecuteReturningWithDefaultOnError
+// ExecReturningWithDefaultOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) ExecuteReturningWithDefaultOnError(
+func (r *WriteRequester) ExecReturningWithDefaultOnError(
 	ctx context.Context,
 	dst any, command string, args ...any,
 ) error {
-	return r.ExecuteReturningWithOnError(
+	return r.ExecReturningWithOnError(
 		ctx, TranslateWriteErrorFunc(), dst, command, args...,
 	)
 }
 
-// ExecuteReturningWithOnError
+// ExecReturningWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) ExecuteReturningWithOnError(
+func (r *WriteRequester) ExecReturningWithOnError(
 	ctx context.Context,
 	onError func(error) error,
 	dst any, command string, args ...any,
@@ -96,16 +96,16 @@ func (r *WriteRequester) ExecuteReturningWithOnError(
 	tx := extractTx(ctx)
 
 	if tx != nil {
-		return r.doExecuteTxReturningWithOnError(ctx, tx, onError, dst, command, args...)
+		return r.doExecTxReturningWithOnError(ctx, tx, onError, dst, command, args...)
 	} else {
-		return r.doExecuteReturningWithOnError(ctx, onError, dst, command, args...)
+		return r.doExecReturningWithOnError(ctx, onError, dst, command, args...)
 	}
 
 }
 
-// ExecuteReturningWithOnError
+// ExecReturningWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) doExecuteTxReturningWithOnError(
+func (r *WriteRequester) doExecTxReturningWithOnError(
 	ctx context.Context,
 	tx *pgxpool.Tx,
 	onError func(error) error,
@@ -116,9 +116,9 @@ func (r *WriteRequester) doExecuteTxReturningWithOnError(
 	return onError(err)
 }
 
-// ExecuteReturningWithOnError
+// ExecReturningWithOnError
 // https://github.com/jackc/pgx/issues/411#issuecomment-395987764
-func (r *WriteRequester) doExecuteReturningWithOnError(
+func (r *WriteRequester) doExecReturningWithOnError(
 	ctx context.Context,
 	onError func(error) error,
 	dst any, command string, args ...any,

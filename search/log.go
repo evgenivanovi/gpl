@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/evgenivanovi/gpl/stdx"
@@ -44,6 +45,12 @@ type OrderConditionModel struct {
 
 func Log(spec Specification) {
 	slogx.Log().Debug(
+		"Specification query", LogAttr(spec),
+	)
+}
+
+func LogCtx(ctx context.Context, spec Specification) {
+	slogx.FromCtx(ctx).Debug(
 		"Specification query", LogAttr(spec),
 	)
 }

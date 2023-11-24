@@ -123,7 +123,7 @@ func Commit(ctx context.Context, trx pgx.Tx) error {
 	err := trx.Commit(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("trx.Commit failed: %s", err)
-		slog.Log().Debug(msg)
+		slog.FromCtx(ctx).Debug(msg)
 		return err
 	}
 	return nil
@@ -141,7 +141,7 @@ func Rollback(ctx context.Context, trx pgx.Tx) error {
 	err := trx.Rollback(ctx)
 	if err != nil {
 		msg := fmt.Sprintf("trx.Rollback failed: %s", err)
-		slog.Log().Debug(msg)
+		slog.FromCtx(ctx).Debug(msg)
 		return err
 	}
 	return nil

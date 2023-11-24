@@ -9,26 +9,6 @@ import (
 
 /* __________________________________________________ */
 
-func AllSameType(slice []any) (bool, reflect.Type) {
-
-	if len(slice) <= 1 {
-		return true, nil
-	}
-
-	TYPE := reflect.TypeOf(slice[0])
-
-	for _, value := range slice {
-		if reflect.TypeOf(value) != TYPE {
-			return false, nil
-		}
-	}
-
-	return true, TYPE
-
-}
-
-/* __________________________________________________ */
-
 var durationType = reflect.TypeOf(time.Duration(0))
 var durationPointerType = reflect.TypeOf(ptr.Duration(time.Duration(0)))
 

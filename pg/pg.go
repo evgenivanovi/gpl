@@ -107,17 +107,17 @@ func (o ConnectionSettingOp) Join(op ConnectionSettingOp) ConnectionSettingOp {
 }
 
 func (o ConnectionSettingOp) And(ops ...ConnectionSettingOp) ConnectionSettingOp {
-	return func(opts *ConnectionSettings) {
-		o(opts)
-		for _, fn := range ops {
-			fn(opts)
+	return func(settings *ConnectionSettings) {
+		o(settings)
+		for _, op := range ops {
+			op(settings)
 		}
 	}
 }
 
 func WithTimeout(duration time.Duration) ConnectionSettingOp {
-	return func(opts *ConnectionSettings) {
-		opts.Timeout = duration
+	return func(settings *ConnectionSettings) {
+		settings.Timeout = duration
 	}
 }
 

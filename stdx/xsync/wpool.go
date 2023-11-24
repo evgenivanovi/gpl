@@ -32,7 +32,6 @@ func NewWorkerPool[T any](
 }
 
 func (wp *WorkerPool[T]) Run(ctx context.Context) {
-	slogx.Log().Debug("Starting workers...")
 	for worker := 0; worker < wp.workers; worker++ {
 		go wp.execute(ctx)
 	}
@@ -47,7 +46,6 @@ func (wp *WorkerPool[T]) execute(ctx context.Context) {
 	for {
 		task, err := wp.queue.PopWait()
 		if err != nil {
-			slogx.Log().Debug("queue is closed. exiting from worker.")
 			break
 		}
 
@@ -61,8 +59,8 @@ func (wp *WorkerPool[T]) doExecute(ctx context.Context, task T) {
 
 	err := wp.action(ctx, task)
 	if err != nil {
-		slogx.Log().Debug(
-			"error is occurred in worker",
+		slogx.FromCtx(ctx).Debug(
+			"error has occurred in worker",
 			slogx.ErrAttr(fmt.Errorf("worker action: %w", err)),
 		)
 	}
