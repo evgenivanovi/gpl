@@ -1,4 +1,4 @@
-package jwtx
+package http
 
 import (
 	"net/http"
@@ -31,25 +31,25 @@ func WithClaims(claims func() jwt.Claims) MiddlewareOp {
 
 func WithExtractor(extractors ...request.Extractor) MiddlewareOp {
 	return func(mw *middleware) {
-		mw.extractors = extractors
+		mw.extractor = extractors
 	}
 }
 
-func WithBefore(before func(http.ResponseWriter, *http.Request)) MiddlewareOp {
+func WithGenerator(generator func() string) MiddlewareOp {
 	return func(mw *middleware) {
-		mw.before = before
+		mw.generator = generator
 	}
 }
 
-func WithAfter(after func(http.ResponseWriter, *http.Request, *jwt.Token, string) error) MiddlewareOp {
+func WithVerifier(verifier func(http.ResponseWriter, *http.Request, *jwt.Token, string) error) MiddlewareOp {
 	return func(mw *middleware) {
-		mw.after = after
+		mw.verifier = verifier
 	}
 }
 
-func WithRecover(recover func(http.ResponseWriter, *http.Request, error)) MiddlewareOp {
+func WithRecoverer(recoverer func(http.ResponseWriter, *http.Request, error)) MiddlewareOp {
 	return func(mw *middleware) {
-		mw.recover = recover
+		mw.recoverer = recoverer
 	}
 }
 
