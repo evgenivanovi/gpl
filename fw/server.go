@@ -1,7 +1,6 @@
 package fw
 
 import (
-	"crypto/tls"
 	"strconv"
 	"strings"
 
@@ -14,67 +13,26 @@ import (
 const ServerDefaultHost = "localhost"
 const ServerDefaultHTTPPort = 80
 const ServerDefaultHTTPSPort = 443
+const ServerDefaultGRPCPort = 82
 
 /* __________________________________________________ */
 
 type ServerOp func(*ServerSettings)
 
 func (o ServerOp) Join(op ServerOp) ServerOp {
-	return func(opts *ServerSettings) {
-		o(opts)
-		op(opts)
+	return func(settings *ServerSettings) {
+		o(settings)
+		op(settings)
 	}
 }
 
 func (o ServerOp) And(ops ...ServerOp) ServerOp {
-	return func(opts *ServerSettings) {
-		o(opts)
-		for _, fn := range ops {
-			fn(opts)
+	return func(settings *ServerSettings) {
+		o(settings)
+		for _, op := range ops {
+			op(settings)
 		}
 	}
-}
-
-/* __________________________________________________ */
-
-type ServerSettings struct {
-	host string
-
-	httpPort    int
-	httpEnabled bool
-
-	httpsPort    int
-	httpsEnabled bool
-
-	tls *TLS
-}
-
-/* __________________________________________________ */
-
-func (op ServerSettings) HttpEnabled() bool {
-	return op.httpEnabled
-}
-
-func (op ServerSettings) HttpsEnabled() bool {
-	return op.httpsEnabled
-}
-
-/* __________________________________________________ */
-
-func (op ServerSettings) HttpAddress() string {
-	result := strings.Builder{}
-	result.WriteString(op.host)
-	result.WriteString(std.Colon)
-	result.WriteString(strconv.Itoa(op.httpPort))
-	return result.String()
-}
-
-func (op ServerSettings) HttpsAddress() string {
-	result := strings.Builder{}
-	result.WriteString(op.host)
-	result.WriteString(std.Colon)
-	result.WriteString(strconv.Itoa(op.httpsPort))
-	return result.String()
 }
 
 /* __________________________________________________ */
@@ -92,44 +50,56 @@ func WithHostFn(fn func() string) ServerOp {
 /* __________________________________________________ */
 
 func WithHttp(enabled bool) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpEnabled = enabled
+	return func(settings *ServerSettings) {
+		settings.httpEnabled = enabled
 	}
 }
 
 func WithHttpEnabled() ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpEnabled = true
+	return func(settings *ServerSettings) {
+		settings.httpEnabled = true
 	}
 }
 
 func WithHttps(enabled bool) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpsEnabled = enabled
+	return func(settings *ServerSettings) {
+		settings.httpsEnabled = enabled
 	}
 }
 
 func WithHttpsEnabled() ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpsEnabled = true
+	return func(settings *ServerSettings) {
+		settings.httpsEnabled = true
+	}
+}
+
+func WithGrpc(enabled bool) ServerOp {
+	return func(settings *ServerSettings) {
+		settings.grpcEnabled = enabled
+	}
+}
+
+func WithGrpcEnabled() ServerOp {
+	return func(settings *ServerSettings) {
+		settings.grpcEnabled = true
 	}
 }
 
 /* __________________________________________________ */
 
 func WithStringHttpPort(port string) ServerOp {
-	return func(opts *ServerSettings) {
-		p, err := strutil.ToInt(port)
+	return func(settings *ServerSettings) {
+		port, err := strutil.ToInt(port)
 		if err != nil {
 			panic(err)
 		}
-		opts.httpPort = p
+		settings.httpPort = port
 	}
 }
 
 func WithHttpPort(port int) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpPort = port
+	return func(settings *ServerSettings) {
+		settings.httpPort = port
 	}
 }
 
@@ -140,12 +110,12 @@ func WithHttpPortFn(fn func() int) ServerOp {
 /* __________________________________________________ */
 
 func WithStringHttpsPort(port string) ServerOp {
-	return func(opts *ServerSettings) {
-		p, err := strutil.ToInt(port)
+	return func(settings *ServerSettings) {
+		port, err := strutil.ToInt(port)
 		if err != nil {
 			panic(err)
 		}
-		opts.httpsPort = p
+		settings.httpsPort = port
 	}
 }
 
@@ -161,12 +131,37 @@ func WithHttpsPortFn(fn func() int) ServerOp {
 
 /* __________________________________________________ */
 
+func WithStringGrpcPort(port string) ServerOp {
+	return func(settings *ServerSettings) {
+		port, err := strutil.ToInt(port)
+		if err != nil {
+			panic(err)
+		}
+		settings.grpcPort = port
+	}
+}
+
+func WithGrpcPort(port int) ServerOp {
+	return func(settings *ServerSettings) {
+		settings.grpcPort = port
+	}
+}
+
+func WithGrpcPortFn(fn func() int) ServerOp {
+	return WithGrpcPort(fn())
+}
+
+/* __________________________________________________ */
+
 func WithHttpAddress(address string) ServerOp {
 	host, port, found := strings.Cut(address, std.Colon)
+
 	if !found {
 		return WithHost(address)
 	}
-	return WithHost(host).Join(WithStringHttpPort(port))
+
+	return WithHost(host).
+		Join(WithStringHttpPort(port))
 }
 
 func WithHttpAddressFn(fn func() string) ServerOp {
@@ -177,14 +172,34 @@ func WithHttpAddressFn(fn func() string) ServerOp {
 
 func WithHttpsAddress(address string) ServerOp {
 	host, port, found := strings.Cut(address, std.Colon)
+
 	if !found {
 		return WithHost(address)
 	}
-	return WithHost(host).Join(WithStringHttpsPort(port))
+
+	return WithHost(host).
+		Join(WithStringHttpsPort(port))
 }
 
 func WithHttpsAddressFn(fn func() string) ServerOp {
 	return WithHttpsAddress(fn())
+}
+
+/* __________________________________________________ */
+
+func WithGrpcAddress(address string) ServerOp {
+	host, port, found := strings.Cut(address, std.Colon)
+
+	if !found {
+		return WithHost(address)
+	}
+
+	return WithHost(host).
+		Join(WithStringGrpcPort(port))
+}
+
+func WithGrpcAddressFn(fn func() string) ServerOp {
+	return WithGrpcAddress(fn())
 }
 
 /* __________________________________________________ */
@@ -197,9 +212,64 @@ func WithTLS(fn func() *TLS) ServerOp {
 
 /* __________________________________________________ */
 
-func NewServerSettings(opts ...ServerOp) *ServerSettings {
+type ServerSettings struct {
+	host string
+
+	httpPort    int
+	httpEnabled bool
+
+	httpsPort    int
+	httpsEnabled bool
+
+	grpcPort    int
+	grpcEnabled bool
+
+	tls *TLS
+}
+
+/* __________________________________________________ */
+
+func (ss ServerSettings) HttpEnabled() bool {
+	return ss.httpEnabled
+}
+
+func (ss ServerSettings) HttpsEnabled() bool {
+	return ss.httpsEnabled
+}
+
+func (ss ServerSettings) GrpcEnabled() bool {
+	return ss.grpcEnabled
+}
+
+/* __________________________________________________ */
+
+func (ss ServerSettings) HttpAddress() string {
+	res := strings.Builder{}
+	res.WriteString(ss.host)
+	res.WriteString(std.Colon)
+	res.WriteString(strconv.Itoa(ss.httpPort))
+	return res.String()
+}
+
+func (ss ServerSettings) HttpsAddress() string {
+	res := strings.Builder{}
+	res.WriteString(ss.host)
+	res.WriteString(std.Colon)
+	res.WriteString(strconv.Itoa(ss.httpsPort))
+	return res.String()
+}
+
+func (ss ServerSettings) GrpcAddress() string {
+	res := strings.Builder{}
+	res.WriteString(ss.host)
+	res.WriteString(std.Colon)
+	res.WriteString(strconv.Itoa(ss.grpcPort))
+	return res.String()
+}
+
+func NewServerSettings(ops ...ServerOp) *ServerSettings {
 	settings := defaultServerSettings()
-	for _, op := range opts {
+	for _, op := range ops {
 		op(&settings)
 	}
 	return &settings
@@ -215,103 +285,11 @@ func defaultServerSettings() ServerSettings {
 		httpsPort:    ServerDefaultHTTPSPort,
 		httpsEnabled: false,
 
+		grpcPort:    ServerDefaultGRPCPort,
+		grpcEnabled: false,
+
 		tls: NewTLS(),
 	}
-}
-
-/* __________________________________________________ */
-
-type TLSOp func(*TLS)
-
-func WithConfig(config *tls.Config) TLSOp {
-	return func(tls *TLS) {
-		if tls != nil {
-			tls.config = config
-		}
-	}
-}
-
-func WithCert(cert string) TLSOp {
-	return func(tls *TLS) {
-		if tls != nil {
-			tls.cert = cert
-		}
-	}
-}
-
-func WithKey(key string) TLSOp {
-	return func(tls *TLS) {
-		if tls != nil {
-			tls.key = key
-		}
-	}
-}
-
-func WithCertKey(cert, key string) TLSOp {
-	return func(tls *TLS) {
-		tls.cert = cert
-		tls.key = key
-	}
-}
-
-/* __________________________________________________ */
-
-type TLS struct {
-	config *tls.Config
-	cert   string
-	key    string
-}
-
-func (tls *TLS) Enabled() bool {
-	return tls.EnabledAutoTLS() || tls.EnabledNonAutoTLS()
-}
-
-func (tls *TLS) Disabled() bool {
-	return !tls.Enabled()
-}
-
-// EnabledAutoTLS
-// Filenames containing a certificate and matching private key for the
-// server must be provided if neither the Server's TLSConfig.Certificates
-// nor TLSConfig.GetCertificate are populated.
-func (tls *TLS) EnabledAutoTLS() bool {
-
-	if tls == nil || tls.config == nil {
-		return false
-	}
-
-	if len(tls.config.Certificates) == 0 || tls.config.GetCertificate == nil {
-		return false
-	}
-
-	return strutil.IsBlank(tls.cert) && strutil.IsBlank(tls.key)
-
-}
-
-// EnabledNonAutoTLS
-// Filenames containing a certificate and matching private key for the
-// server must be provided if neither the Server's TLSConfig.Certificates
-// nor TLSConfig.GetCertificate are populated.
-func (tls *TLS) EnabledNonAutoTLS() bool {
-
-	if tls == nil || tls.config == nil {
-		return false
-	}
-
-	if len(tls.config.Certificates) != 0 || tls.config.GetCertificate != nil {
-		return false
-	}
-
-	return strutil.IsNotBlank(tls.cert) && strutil.IsNotBlank(tls.key)
-
-}
-
-func NewTLS(opts ...TLSOp) *TLS {
-	cfg := &TLS{}
-	for _, fn := range opts {
-		fn(cfg)
-	}
-	return cfg
 }
 
 /* __________________________________________________ */

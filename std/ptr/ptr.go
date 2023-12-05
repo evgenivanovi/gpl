@@ -93,3 +93,13 @@ func Duration(v time.Duration) *time.Duration {
 }
 
 /* __________________________________________________ */
+
+func Slice[S ~[]T, T any](v S) *S {
+	return &v
+}
+
+func Map[M ~map[K]V, K comparable, V any](v M) *M {
+	return &v
+}
+
+/* __________________________________________________ */

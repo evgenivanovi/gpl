@@ -11,50 +11,65 @@ import (
 	"syscall"
 	"time"
 
+	grpcfw "github.com/evgenivanovi/gpl/server"
 	slogx "github.com/evgenivanovi/gpl/stdx/log/slog"
 )
+
+/* __________________________________________________ */
 
 // RunServer
 // When we receive a SIGINT or SIGTERM signal,
 // we instruct our server to stop accepting any new HTTP(s) requests,
 // and give any in-flight requests a ‘grace period’ to complete before the application is terminated.
-func RunServer(app *Application, mux http.Handler) error {
+func RunServer(cfg *Configuration) error {
 
 	var httpServer *http.Server = nil
-	if app.Settings.httpEnabled {
+	if cfg.App.Settings.HttpEnabled() {
 		httpServer = &http.Server{
-			Addr:    app.Settings.HttpAddress(),
-			Handler: mux,
+			Addr:    cfg.App.Settings.HttpAddress(),
+			Handler: cfg.HTTPHandler,
 		}
 	}
 
 	var httpsServer *http.Server = nil
-	if app.Settings.httpsEnabled {
+	if cfg.App.Settings.HttpsEnabled() {
 		httpsServer = &http.Server{
-			Addr:      app.Settings.HttpsAddress(),
-			Handler:   mux,
-			TLSConfig: app.Settings.tls.config,
+			Addr:      cfg.App.Settings.HttpsAddress(),
+			Handler:   cfg.HTTPHandler,
+			TLSConfig: cfg.App.Settings.tls.config,
 		}
 	}
 
-	// Create a startError channel.
+	var grpcServer *grpcfw.GRPCServer = nil
+	if cfg.App.Settings.GrpcEnabled() {
+		grpcServer = grpcfw.NewGrpcServer(
+			grpcfw.WithGrpcServerConfig(
+				*grpcfw.NewGRPCServerConfig(cfg.App.Settings.grpcPort),
+			),
+			grpcfw.WithServices(cfg.GRPCServices...),
+			grpcfw.WithUnaryInterceptors(cfg.GRPCUnaryMWs...),
+			grpcfw.WithStreamInterceptors(cfg.GRPCStreamMWs...),
+		)
+	}
+
+	// Create a startErrorCh channel.
 	// We will use this to receive any errors returned by the Startup() function.
-	startErrorChannel := make(chan error)
-	// Create a shutdownError channel.
+	startErrorCh := make(chan error)
+	// Create a shutdownErrorCh channel.
 	// We will use this to receive any errors returned by the Shutdown() function.
-	shutdownErrorChannel := make(chan error)
+	shutdownErrorCh := make(chan error)
 
-	go shutdown(app, shutdownErrorChannel, httpServer, httpsServer)
-	go startup(app, startErrorChannel, httpServer, httpsServer)
+	go shutdown(cfg.App, shutdownErrorCh, httpServer, httpsServer, grpcServer)
+	go startup(cfg.App, startErrorCh, httpServer, httpsServer, grpcServer)
 
-	// Calling Shutdown() on our server will cause ListenAndServe() or ListenAndServerTLS()
+	// Calling Shutdown() on our HTTP servers will cause ListenAndServe() or ListenAndServerTLS()
 	// to immediately return a http.ErrServerClosed error.
 	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
 	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
 	// Otherwise, we wait to receive the return value from Shutdown() on the shutdownError channel.
 	// If return value is an error, we know that there was a problem with the graceful executor, and we return the error.
 	select {
-	case err := <-startErrorChannel:
+	case err := <-startErrorCh:
 		{
 			if err != nil {
 				slogx.Log().Debug(
@@ -64,7 +79,7 @@ func RunServer(app *Application, mux http.Handler) error {
 			}
 			break
 		}
-	case err := <-shutdownErrorChannel:
+	case err := <-shutdownErrorCh:
 		{
 			if err != nil {
 				slogx.Log().Debug(
@@ -86,9 +101,10 @@ func RunServer(app *Application, mux http.Handler) error {
 
 func startup(
 	app *Application,
-	startErrorChannel chan error,
+	startCh chan error,
 	httpServer *http.Server,
 	httpsServer *http.Server,
+	grpcServer *grpcfw.GRPCServer,
 ) {
 
 	app.Start()
@@ -96,7 +112,7 @@ func startup(
 	if app.Settings.httpEnabled && httpServer != nil {
 		go startHttpServer(
 			app,
-			startErrorChannel,
+			startCh,
 			httpServer,
 		)
 	}
@@ -104,8 +120,16 @@ func startup(
 	if app.Settings.httpsEnabled && httpsServer != nil {
 		go startHttpsServer(
 			app,
-			startErrorChannel,
+			startCh,
 			httpsServer,
+		)
+	}
+
+	if app.Settings.grpcEnabled && grpcServer != nil {
+		go startGrpcServer(
+			app,
+			startCh,
+			grpcServer,
 		)
 	}
 
@@ -113,7 +137,7 @@ func startup(
 
 func startHttpServer(
 	app *Application,
-	startErrorChannel chan error,
+	startCh chan error,
 	server *http.Server,
 ) {
 
@@ -122,20 +146,25 @@ func startHttpServer(
 	}
 
 	slogx.Log().Debug(
-		"HTTP Server has been run on address: '" + server.Addr + "'",
+		"HTTP server has been run on address: '" + server.Addr + "'",
 	)
 
 	err := server.ListenAndServe()
 
+	// Calling Shutdown() on our HTTP servers will cause ListenAndServe() or ListenAndServerTLS()
+	// to immediately return a http.ErrServerClosed error.
+	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
+	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
 	if !errors.Is(err, http.ErrServerClosed) {
-		startErrorChannel <- err
+		startCh <- err
+		return
 	}
 
 }
 
 func startHttpsServer(
 	app *Application,
-	startErrorChannel chan error,
+	startCh chan error,
 	server *http.Server,
 ) {
 
@@ -144,7 +173,7 @@ func startHttpsServer(
 	}
 
 	slogx.Log().Debug(
-		"HTTPs Server has been run on address: '" + server.Addr + "'",
+		"HTTPs server has been run on address: '" + server.Addr + "'",
 	)
 
 	err := server.ListenAndServeTLS(
@@ -152,9 +181,32 @@ func startHttpsServer(
 		app.Settings.tls.key,
 	)
 
+	// Calling Shutdown() on our HTTP servers will cause ListenAndServe() or ListenAndServerTLS()
+	// to immediately return a http.ErrServerClosed error.
+	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
+	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
 	if !errors.Is(err, http.ErrServerClosed) {
-		startErrorChannel <- err
+		startCh <- err
+		return
 	}
+
+}
+
+func startGrpcServer(
+	app *Application,
+	startCh chan error,
+	server *grpcfw.GRPCServer,
+) {
+
+	if !app.Settings.grpcEnabled {
+		return
+	}
+
+	slogx.Log().Debug(
+		"gRPC server has been run on address: '" + app.Settings.GrpcAddress() + "'",
+	)
+
+	server.StartChannable(startCh)
 
 }
 
@@ -162,38 +214,51 @@ func startHttpsServer(
 
 func shutdown(
 	app *Application,
-	shutdownErrorChannel chan error,
+	shutdownCh chan error,
 	httpServer *http.Server,
 	httpsServer *http.Server,
+	grpcServer *grpcfw.GRPCServer,
 ) {
 
-	servers := make([]*http.Server, 0)
+	httpServers := make([]*http.Server, 0)
 
 	if app.Settings.httpEnabled && httpServer != nil {
-		servers = append(servers, httpServer)
+		httpServers = append(httpServers, httpServer)
 	}
 
 	if app.Settings.httpsEnabled && httpsServer != nil {
-		servers = append(servers, httpsServer)
+		httpServers = append(httpServers, httpsServer)
 	}
 
-	shutdownServers(app, shutdownErrorChannel, servers...)
+	grpcServers := make([]*grpcfw.GRPCServer, 0)
+
+	if app.Settings.grpcEnabled && grpcServer != nil {
+		grpcServers = append(grpcServers, grpcServer)
+	}
+
+	doShutdown(app, shutdownCh, grpcServers, httpServers)
 
 }
 
-func shutdownServers(
+func doShutdown(
 	app *Application,
-	shutdownChannel chan error,
-	servers ...*http.Server,
+	shutdownCh chan error,
+	grpcServers []*grpcfw.GRPCServer,
+	httpServers []*http.Server,
 ) {
 
 	// Create a quitChannel channel which carries os.Signal values.
 	quitChannel := make(chan os.Signal, 1)
 
-	// Use signal.Notify() to listen for incoming SIGINT and SIGTERM signals and
+	// Use signal.Notify() to listen for incoming syscall.SIGINT and syscall.SIGTERM signals and
 	// relay them to the quitChannel channel.
 	// Any other signals will not be caught by signal.Notify() and
 	// will retain their default behavior.
+	//
+	// syscall.SIGKILL signals are not catchable
+	// (and will always cause the application to terminate immediately),
+	// and we’ll leave SIGQUIT with its default behavior
+	// (as it’s handy if you want to execute a non-graceful shutdown via a keyboard shortcut).
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
 
 	// Read the signal from the quitChannel channel.
@@ -204,13 +269,8 @@ func shutdownServers(
 	// Notice that we also call the String() method on the signal to get the signal name and
 	// include it in the log entry properties.
 	slogx.Log().Debug(
-		"Caught OS signal.",
-		slog.String("signal", sig.String()),
-	)
-
-	slogx.Log().Debug(
 		"Shutting down server",
-		slog.String("signal", sig.String()),
+		slog.String("os.signal", sig.String()),
 	)
 
 	// Create a context with a timeout.
@@ -222,11 +282,15 @@ func shutdownServers(
 	// error (which may happen because of a problem closing the listeners, or
 	// because the executor didn't complete before the context deadline is hit).
 	// We relay this return value to the shutdownError channel.
-	for _, server := range servers {
+	for _, server := range httpServers {
 		err := server.Shutdown(ctx)
 		if err != nil {
-			shutdownChannel <- err
+			shutdownCh <- err
 		}
+	}
+
+	for _, server := range grpcServers {
+		server.Stop()
 	}
 
 	slogx.Log().Debug("Completing tasks")
@@ -234,6 +298,6 @@ func shutdownServers(
 
 	// Then we return nil on the shutdownError channel,
 	// to indicate that the executor was completed without any issues.
-	shutdownChannel <- nil
+	shutdownCh <- nil
 
 }
