@@ -100,9 +100,9 @@ func initDefaultEnv() error {
 type ConnectionSettingOp func(*ConnectionSettings)
 
 func (o ConnectionSettingOp) Join(op ConnectionSettingOp) ConnectionSettingOp {
-	return func(opts *ConnectionSettings) {
-		o(opts)
-		op(opts)
+	return func(settings *ConnectionSettings) {
+		o(settings)
+		op(settings)
 	}
 }
 
@@ -127,9 +127,9 @@ type ConnectionSettings struct {
 	Timeout time.Duration
 }
 
-func NewConnectionSettings(opts ...ConnectionSettingOp) *ConnectionSettings {
+func NewConnectionSettings(ops ...ConnectionSettingOp) *ConnectionSettings {
 	settings := connectionSettings()
-	for _, op := range opts {
+	for _, op := range ops {
 		op(settings)
 	}
 	return settings

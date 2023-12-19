@@ -53,7 +53,7 @@ func SetLevel(new zapcore.Level) {
 
 func NewZap(
 	lvl zapcore.LevelEnabler,
-	opts ...zap.Option,
+	ops ...zap.Option,
 ) *zap.Logger {
 
 	if lvl == nil {
@@ -64,7 +64,7 @@ func NewZap(
 	encoder := zapcore.NewJSONEncoder(config)
 	core := zapcore.NewCore(encoder, os.Stdout, level)
 
-	return zap.New(core, opts...)
+	return zap.New(core, ops...)
 
 }
 

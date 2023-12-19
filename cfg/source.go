@@ -324,10 +324,10 @@ func NewYAMLFileSourceWithPath(key string, path func() string) *FileSource {
 
 }
 
-func newFileSourceWithOp(opts ...FileSourceOp) *FileSource {
+func newFileSourceWithOp(ops ...FileSourceOp) *FileSource {
 	src := &FileSource{}
 
-	for _, op := range opts {
+	for _, op := range ops {
 		op(src)
 	}
 

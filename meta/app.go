@@ -2,52 +2,52 @@ package meta
 
 /* __________________________________________________ */
 
-type AppMetadataOp func(metadata *AppMetadata)
+type AppOp func(metadata *App)
 
-func WithAppNameFn(name func() string) AppMetadataOp {
-	return func(metadata *AppMetadata) {
+func WithAppNameFn(name func() string) AppOp {
+	return func(metadata *App) {
 		metadata.Name = name()
 	}
 }
 
-func WithAppName(name string) AppMetadataOp {
-	return func(metadata *AppMetadata) {
+func WithAppName(name string) AppOp {
+	return func(metadata *App) {
 		metadata.Name = name
 	}
 }
 
-func WithAppVersionFn(version func() string) AppMetadataOp {
-	return func(metadata *AppMetadata) {
+func WithAppVersionFn(version func() string) AppOp {
+	return func(metadata *App) {
 		metadata.Version = version()
 	}
 }
 
-func WithAppVersion(version string) AppMetadataOp {
-	return func(metadata *AppMetadata) {
+func WithAppVersion(version string) AppOp {
+	return func(metadata *App) {
 		metadata.Version = version
 	}
 }
 
 /* __________________________________________________ */
 
-type AppMetadata struct {
+type App struct {
 	Name    string
 	Version string
 }
 
-func NewAppMetadata(
+func NewApp(
 	name string,
 	version string,
-) AppMetadata {
-	return AppMetadata{
+) App {
+	return App{
 		Name:    name,
 		Version: version,
 	}
 }
 
-func NewAppMetadataWithOps(ops ...AppMetadataOp) AppMetadata {
+func NewAppWithOps(ops ...AppOp) App {
 
-	app := AppMetadata{}
+	app := App{}
 
 	for _, op := range ops {
 		op(&app)

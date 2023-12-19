@@ -38,8 +38,8 @@ func (o ServerOp) And(ops ...ServerOp) ServerOp {
 /* __________________________________________________ */
 
 func WithHost(host string) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.host = host
+	return func(settings *ServerSettings) {
+		settings.host = host
 	}
 }
 
@@ -120,8 +120,8 @@ func WithStringHttpsPort(port string) ServerOp {
 }
 
 func WithHttpsPort(port int) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.httpsPort = port
+	return func(settings *ServerSettings) {
+		settings.httpsPort = port
 	}
 }
 
@@ -205,8 +205,8 @@ func WithGrpcAddressFn(fn func() string) ServerOp {
 /* __________________________________________________ */
 
 func WithTLS(fn func() *TLS) ServerOp {
-	return func(opts *ServerSettings) {
-		opts.tls = fn()
+	return func(settings *ServerSettings) {
+		settings.tls = fn()
 	}
 }
 
