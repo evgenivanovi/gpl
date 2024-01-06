@@ -23,6 +23,14 @@ func MapBool(raw string) (bool, error) {
 	return val, nil
 }
 
+func MustMapBool(raw string) bool {
+	val, err := MapBool(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
 func MapBoolFunc() func(raw string) (bool, error) {
 	return func(raw string) (bool, error) {
 		return MapBool(raw)
@@ -44,6 +52,14 @@ func MapInt(raw string) (int, error) {
 		return 0, fmt.Errorf("value cannot be parsed as int: %v", err)
 	}
 	return val, nil
+}
+
+func MustMapInt(raw string) int {
+	val, err := MapInt(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
 }
 
 func MapIntFunc() func(raw string) (int, error) {
@@ -69,6 +85,14 @@ func MapInt64(raw string) (int64, error) {
 	return val, nil
 }
 
+func MustMapInt64(raw string) int64 {
+	val, err := MapInt64(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
 func MapInt64Func() func(raw string) (int64, error) {
 	return func(raw string) (int64, error) {
 		return MapInt64(raw)
@@ -90,6 +114,14 @@ func MapUint(raw string) (uint, error) {
 		return 0, fmt.Errorf("value cannot be parsed as uint: %v", err)
 	}
 	return uint(val), nil
+}
+
+func MustMapUint(raw string) uint {
+	val, err := MapUint(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
 }
 
 func MapUintFunc() func(raw string) (uint, error) {
@@ -115,6 +147,14 @@ func MapUint16(raw string) (uint16, error) {
 	return uint16(val), nil
 }
 
+func MustMapUint16(raw string) uint16 {
+	val, err := MapUint16(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
 func MapUint16Func() func(raw string) (uint16, error) {
 	return func(raw string) (uint16, error) {
 		return MapUint16(raw)
@@ -136,6 +176,14 @@ func MapUint64(raw string) (uint64, error) {
 		return 0, fmt.Errorf("value cannot be parsed as uint64: %v", err)
 	}
 	return val, nil
+}
+
+func MustMapUint64(raw string) uint64 {
+	val, err := MapUint64(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
 }
 
 func MapUint64Func() func(raw string) (uint64, error) {
@@ -161,6 +209,14 @@ func MapFloat64(raw string) (float64, error) {
 	return val, nil
 }
 
+func MustMapFloat64(raw string) float64 {
+	val, err := MapFloat64(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
 func MapFloat64Func() func(raw string) (float64, error) {
 	return func(raw string) (float64, error) {
 		return MapFloat64(raw)
@@ -182,6 +238,14 @@ func MapDuration(raw string) (time.Duration, error) {
 		return 0, fmt.Errorf("value cannot be parsed as time.Duration: %v", err)
 	}
 	return val, nil
+}
+
+func MustMapDuration(raw string) time.Duration {
+	val, err := MapDuration(raw)
+	if err != nil {
+		panic(err)
+	}
+	return val
 }
 
 func MapDurationFunc() func(raw string) (time.Duration, error) {

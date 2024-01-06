@@ -29,6 +29,42 @@ func FirstBoolOr(or bool) func(sources []Source) stdx.Value {
 
 /* __________________________________________________ */
 
+func FirstInt(or int) func(sources []Source) stdx.Value {
+	return func(sources []Source) stdx.Value {
+		result := stdx.NewValue(or)
+		for _, source := range sources {
+			sourceValue := source.Map(
+				func(raw string) (any, error) {
+					return conv.MapInt(raw)
+				},
+			)
+			if sourceValue.IsInt() {
+				return sourceValue
+			}
+		}
+		return result
+	}
+}
+
+func FirstInt64(or int64) func(sources []Source) stdx.Value {
+	return func(sources []Source) stdx.Value {
+		result := stdx.NewValue(or)
+		for _, source := range sources {
+			sourceValue := source.Map(
+				func(raw string) (any, error) {
+					return conv.MapInt64(raw)
+				},
+			)
+			if sourceValue.IsInt64() {
+				return sourceValue
+			}
+		}
+		return result
+	}
+}
+
+/* __________________________________________________ */
+
 func FirstDurationOr(or time.Duration) func(sources []Source) stdx.Value {
 	return func(sources []Source) stdx.Value {
 		result := stdx.NewValue(or)
