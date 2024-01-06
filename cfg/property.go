@@ -78,7 +78,7 @@ func (p *Property) recover() {
 	if result := recover(); result != nil {
 		if err, ok := result.(error); ok {
 			if errors.Is(err, PropertyNotFoundError) {
-				msg := fmt.Sprintf("property %s not found in sources", p.name)
+				msg := fmt.Sprintf("property '%s' not found in sources", p.name)
 				panic(msg)
 			}
 		}
