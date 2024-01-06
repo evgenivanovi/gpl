@@ -123,12 +123,12 @@ func FirstStringNotEmptyElse() func(sources []Source) (string, error) {
 	}
 }
 
-func FirstStringNotEmptyThrow() func(sources []Source) (string, error) {
-	return func(sources []Source) (string, error) {
+func FirstStringNotEmptyThrow() func(sources []Source) string {
+	return func(sources []Source) string {
 		for _, source := range sources {
 			sourceResult, sourcePresent := source.Get()
 			if sourcePresent && strutil.IsNotBlank(sourceResult) {
-				return sourceResult, nil
+				return sourceResult
 			}
 		}
 		panic(PropertyNotFoundError)
