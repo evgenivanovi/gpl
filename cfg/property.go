@@ -1,7 +1,10 @@
 package cfg
 
 import (
+	"fmt"
+
 	"github.com/evgenivanovi/gpl/stdx"
+	"github.com/pkg/errors"
 )
 
 /* __________________________________________________ */
@@ -18,6 +21,7 @@ func (p *Property) Name() string {
 func (p *Property) Calc(
 	calc func(sources []Source) string,
 ) string {
+	defer p.recover()
 	return calc(p.sources)
 }
 
@@ -32,6 +36,7 @@ func (p *Property) CalcFn(
 func (p *Property) CalcValue(
 	calc func(sources []Source) stdx.Value,
 ) stdx.Value {
+	defer p.recover()
 	return calc(p.sources)
 }
 
@@ -67,6 +72,17 @@ func (p *Property) BindAll(
 	sources ...Source,
 ) {
 	p.sources = append(p.sources, sources...)
+}
+
+func (p *Property) recover() {
+	if result := recover(); result != nil {
+		if err, ok := result.(error); ok {
+			if errors.Is(err, PropertyNotFoundError) {
+				msg := fmt.Sprintf("property %s not found in sources", p.name)
+				panic(msg)
+			}
+		}
+	}
 }
 
 func NewProperty(
