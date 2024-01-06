@@ -196,9 +196,6 @@ func (s FileSource) Get() (string, bool) {
 
 	s.once()
 
-	value1 := cfg.String(s.key)
-	println(value1)
-
 	value := cfg.Get(s.key)
 	if value == nil {
 		return std.Empty, false
