@@ -46,6 +46,7 @@ func RunServer(cfg *Configuration) error {
 			grpcfw.WithGrpcServerConfig(
 				*grpcfw.NewGRPCServerConfig(cfg.App.Settings.grpcPort),
 			),
+			grpcfw.WithGrpcReflection(cfg.GRPCReflection),
 			grpcfw.WithServices(cfg.GRPCServices...),
 			grpcfw.WithUnaryInterceptors(cfg.GRPCUnaryMWs...),
 			grpcfw.WithStreamInterceptors(cfg.GRPCStreamMWs...),

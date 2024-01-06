@@ -97,10 +97,10 @@ func (s ArgSource) Map(mapping func(string) (any, error)) stdx.Value {
 }
 
 func NewArgSource(key string) *ArgSource {
-	return NewArgSourceWithDesc(key, "", "")
+	return NewArgSourceWithOps(key, "", "")
 }
 
-func NewArgSourceWithDesc(key, onAbsence, usage string) *ArgSource {
+func NewArgSourceWithOps(key, onAbsence, usage string) *ArgSource {
 
 	if strutil.IsEmpty(key) {
 		panic("key is required")
@@ -195,9 +195,6 @@ type FileSource struct {
 func (s FileSource) Get() (string, bool) {
 
 	s.once()
-
-	value1 := cfg.String(s.key)
-	println(value1)
 
 	value := cfg.Get(s.key)
 	if value == nil {

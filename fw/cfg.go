@@ -48,9 +48,10 @@ type Configuration struct {
 
 	HTTPHandler http.Handler
 
-	GRPCServices  []grpcfw.GRPCService
-	GRPCUnaryMWs  []grpc.UnaryServerInterceptor
-	GRPCStreamMWs []grpc.StreamServerInterceptor
+	GRPCReflection bool
+	GRPCServices   []grpcfw.GRPCService
+	GRPCUnaryMWs   []grpc.UnaryServerInterceptor
+	GRPCStreamMWs  []grpc.StreamServerInterceptor
 }
 
 func NewConfiguration(ops ...ConfigurationOp) *Configuration {
@@ -70,28 +71,39 @@ func defaultConfiguration() *Configuration {
 	}
 }
 
-func (c *Configuration) WithHTTPHandler(handler http.Handler) {
+func (c *Configuration) WithHTTPHandler(handler http.Handler) *Configuration {
 	if c != nil {
 		c.HTTPHandler = handler
 	}
+	return c
 }
 
-func (c *Configuration) WithGRPCServices(services ...grpcfw.GRPCService) {
+func (c *Configuration) WithGRPCReflection(reflection bool) *Configuration {
+	if c != nil {
+		c.GRPCReflection = reflection
+	}
+	return c
+}
+
+func (c *Configuration) WithGRPCServices(services ...grpcfw.GRPCService) *Configuration {
 	if c != nil && len(services) != 0 {
 		c.GRPCServices = append(c.GRPCServices, services...)
 	}
+	return c
 }
 
-func (c *Configuration) WithGRPCUnaryMW(mws ...grpc.UnaryServerInterceptor) {
+func (c *Configuration) WithGRPCUnaryMW(mws ...grpc.UnaryServerInterceptor) *Configuration {
 	if c != nil && len(mws) != 0 {
 		c.GRPCUnaryMWs = append(c.GRPCUnaryMWs, mws...)
 	}
+	return c
 }
 
-func (c *Configuration) WithGRPCStreamMW(mws ...grpc.StreamServerInterceptor) {
+func (c *Configuration) WithGRPCStreamMW(mws ...grpc.StreamServerInterceptor) *Configuration {
 	if c != nil && len(mws) != 0 {
 		c.GRPCStreamMWs = append(c.GRPCStreamMWs, mws...)
 	}
+	return c
 }
 
 /* __________________________________________________ */

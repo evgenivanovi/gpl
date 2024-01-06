@@ -9,6 +9,7 @@ import (
 	netx "github.com/evgenivanovi/gpl/stdx/net"
 	grpcmw "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 /* __________________________________________________ */
@@ -26,6 +27,13 @@ type GRPCServerOp func(*GRPCServer)
 func WithGrpcServerConfig(config GRPCServerConfig) GRPCServerOp {
 	return func(server *GRPCServer) {
 		server.config = config
+	}
+}
+
+// WithGrpcReflection - adds or removes reflection to GrpcServer.
+func WithGrpcReflection(reflection bool) GRPCServerOp {
+	return func(server *GRPCServer) {
+		server.reflection = reflection
 	}
 }
 
@@ -100,6 +108,7 @@ func (cfg GRPCServerConfig) PortString() string {
 
 type GRPCServer struct {
 	server             *grpc.Server
+	reflection         bool
 	services           []GRPCService
 	config             GRPCServerConfig
 	unaryInterceptors  []grpc.UnaryServerInterceptor
@@ -169,6 +178,10 @@ func (s *GRPCServer) executeStart(onError func(error)) {
 	)
 
 	s.RegisterServices(s.services...)
+
+	if s.reflection {
+		reflection.Register(s.server)
+	}
 
 	go func() {
 		err = s.server.Serve(conn)

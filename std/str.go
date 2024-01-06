@@ -51,6 +51,9 @@ const (
 
 	OpenSquareBracket  = "["
 	CloseSquareBracket = "]"
+
+	NL  = "\n"
+	Tab = "\t"
 )
 
 /* __________________________________________________ */
