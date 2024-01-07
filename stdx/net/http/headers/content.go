@@ -3,6 +3,8 @@ package headers
 /* __________________________________________________ */
 
 const (
+	AcceptKey HeaderKey = "Accept"
+
 	ContentTypeKey     HeaderKey = "Content-Type"
 	ContentLengthKey   HeaderKey = "Content-Length"
 	ContentEncodingKey HeaderKey = "Content-Encoding"
