@@ -1,4 +1,4 @@
-package slices
+package slice
 
 import (
 	"slices"
@@ -9,7 +9,6 @@ import (
 // Dedup removes duplicate values from slice.
 // It will alter original non-empty slice, consider copy it beforehand.
 func Dedup[E constraints.Ordered](slice []E) []E {
-
 	if len(slice) < 2 {
 		return slice
 	}
@@ -27,5 +26,4 @@ func Dedup[E constraints.Ordered](slice []E) []E {
 	}
 
 	return temp
-
 }

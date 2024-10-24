@@ -2,6 +2,7 @@ package xsync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime/debug"
 	"sync"
@@ -9,161 +10,207 @@ import (
 	slogx "github.com/evgenivanovi/gpl/stdx/log/slog"
 )
 
-func RUN(task func()) {
-	doRUN(task)
+var ErrRecovered = errors.New("recovered from panic")
+
+// Run executes a function.
+// Panics are suppressed.
+func Run(task func()) {
+	_ = execFunc(task)
 }
 
-func doRUN(task func()) {
-	if task != nil {
-		var action = func(task func()) {
-			defer rec()
-			task()
-		}
-		action(task)
-	}
+// RunFunc executes function.
+// Panics are captured and returned as errors.
+func RunFunc(task func()) error {
+	return execFunc(task)
 }
 
-func GO(task func()) {
-	go doGO(task)
+// RunErrorFunc executes function.
+// Panics are captured and returned as errors.
+func RunErrorFunc(task func() error) error {
+	return execErrorFunc(task)
 }
 
-func doGO(task func()) {
-	if task != nil {
-		var action = func(task func()) {
-			defer rec()
-			task()
-		}
-		action(task)
-	}
+// Go runs a function in a new goroutine.
+// Panics are suppressed.
+func Go(task func()) {
+	go func() {
+		defer suppressed()
+		task()
+	}()
+}
+
+// GoFunc executes a function in a new goroutine.
+// Panics are captured and returned as errors.
+func GoFunc(task func()) <-chan error {
+	out := make(chan error, 1)
+	go func() {
+		defer close(out)
+		out <- execFunc(task)
+	}()
+	return out
+}
+
+// GoFunc executes a function in a new goroutine.
+// Panics are captured and returned as errors.
+func GoErrorFunc(task func() error) <-chan error {
+	out := make(chan error, 1)
+	go func() {
+		defer close(out)
+		out <- execErrorFunc(task)
+	}()
+	return out
 }
 
 func GOWG(task func(), wgs ...*sync.WaitGroup) {
-	if task == nil {
-		return
-	}
+	addWG(wgs...)
+	go func() {
+		defer doneWG(wgs...)
+		_ = execFunc(task)
+	}()
+}
+
+func GOWGFunc(task func(), wgs ...*sync.WaitGroup) <-chan error {
+	out := make(chan error, 1)
+	addWG(wgs...)
+	go func() {
+		defer doneWG(wgs...)
+		out <- execFunc(task)
+	}()
+	return out
+}
+
+func GOWGErrorFunc(task func() error, wgs ...*sync.WaitGroup) <-chan error {
+	out := make(chan error, 1)
+	addWG(wgs...)
+	go func() {
+		defer doneWG(wgs...)
+		out <- execErrorFunc(task)
+	}()
+	return out
+}
+
+func addWG(wgs ...*sync.WaitGroup) {
 	for _, wg := range wgs {
 		wg.Add(1)
 	}
-	go doGOWG(task, wgs...)
 }
 
-func doGOWG(task func(), wgs ...*sync.WaitGroup) {
-
-	done := func() {
-		for _, wg := range wgs {
-			wg.Done()
-		}
-	}
-
-	defer done()
-
-	if task == nil {
-		return
-	}
-
-	var action = func(task func()) {
-		defer rec()
-		task()
-	}
-	action(task)
-
-}
-
-func GOCLWG(
-	task func(ctx context.Context) error,
-	ctx context.Context,
-	cancel context.CancelFunc,
-	wgs ...*sync.WaitGroup,
-) {
-	if task == nil {
-		return
-	}
+func doneWG(wgs ...*sync.WaitGroup) {
 	for _, wg := range wgs {
-		wg.Add(1)
+		wg.Done()
 	}
-	go doGOCLWG(task, ctx, cancel, wgs...)
 }
 
-func doGOCLWG(
-	task func(ctx context.Context) error,
-	ctx context.Context,
-	cancel context.CancelFunc,
-	wgs ...*sync.WaitGroup,
-) {
-
-	done := func() {
-		for _, wg := range wgs {
-			wg.Done()
+func execFunc(task func()) (result error) {
+	defer func() {
+		if res := recover(); res != nil {
+			// wrap error if result is error otherwise no
+			if err, ok := res.(error); ok {
+				err = fmt.Errorf("xsync: %w: %w", ErrRecovered, err)
+				slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+				result = err
+				return
+			} else {
+				err = fmt.Errorf("xsync: %w: %v", ErrRecovered, res)
+				slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+				result = err
+				return
+			}
 		}
-	}
+	}()
 
-	defer done()
+	task()
+	return result
+}
 
-	if task == nil {
-		return
-	}
+func execErrorFunc(task func() error) (result error) {
+	defer func() {
+		if res := recover(); res != nil {
+			// wrap error if result is error otherwise no
+			if err, ok := res.(error); ok {
+				err = fmt.Errorf("xsync: %w: %w", ErrRecovered, err)
+				slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+				result = err
+				return
+			} else {
+				err = fmt.Errorf("xsync: %w: %v", ErrRecovered, res)
+				slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+				result = err
+				return
+			}
+		}
+	}()
 
-	var action = func(task func(ctx context.Context) error) {
-		defer ccl(cancel)
+	return task()
+}
+
+func execContextualFunc(ctx context.Context, tasks <-chan func(), errs chan<- error) {
+	for {
 		select {
 		case <-ctx.Done():
-			_ = ctx.Err()
-		default:
-			if err := task(ctx); err != nil {
-				cancel()
+			{
+				return
+			}
+		case task, open := <-tasks:
+			{
+				if !open {
+					return
+				}
+
+				errs <- execFunc(task)
+				return
 			}
 		}
 	}
-	action(task)
-
 }
 
-func GOCHWG(task func() error, ch chan error, wgs ...*sync.WaitGroup) {
-	if task == nil {
-		return
-	}
-	for _, wg := range wgs {
-		wg.Add(1)
-	}
-	go doGOCHWG(task, ch, wgs...)
-}
+func execContextualErrorFunc(ctx context.Context, tasks <-chan func() error, errs chan<- error) {
+	for {
+		select {
+		case <-ctx.Done():
+			{
+				return
+			}
+		case task, open := <-tasks:
+			{
+				if !open {
+					return
+				}
 
-func doGOCHWG(task func() error, ch chan error, wgs ...*sync.WaitGroup) {
-
-	done := func() {
-		for _, wg := range wgs {
-			wg.Done()
+				errs <- execErrorFunc(task)
+				return
+			}
 		}
 	}
+}
 
-	defer done()
-
-	if task == nil {
-		return
-	}
-
-	var action = func(task func() error) {
-		defer rec()
-		if err := task(); err != nil {
-			ch <- err
-			return
+// Just for reference
+func suppressed() {
+	if res := recover(); res != nil {
+		// wrap error if result is error otherwise no
+		if err, ok := res.(error); ok {
+			err = fmt.Errorf("xsync: %w: %w", ErrRecovered, err)
+			slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+		} else {
+			err = fmt.Errorf("xsync: %w: %v", ErrRecovered, res)
+			slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
 		}
 	}
-	action(task)
-
 }
 
-func rec() {
-	if result := recover(); result != nil {
-		err := fmt.Errorf("xsync: %v", result)
-		slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+// Just for reference
+func returned() error {
+	if res := recover(); res != nil {
+		// wrap error if result is error otherwise no
+		if err, ok := res.(error); ok {
+			err = fmt.Errorf("xsync: %w: %w", ErrRecovered, err)
+			slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+			return err
+		} else {
+			err = fmt.Errorf("xsync: %w: %v", ErrRecovered, res)
+			slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
+			return err
+		}
 	}
-}
-
-func ccl(cancel context.CancelFunc) {
-	if result := recover(); result != nil {
-		err := fmt.Errorf("xsync: %v", result)
-		slogx.Log().With("stack", string(debug.Stack())).Error(err.Error())
-		cancel()
-	}
+	return nil
 }

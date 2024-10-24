@@ -32,8 +32,8 @@ const (
 	Plus  = "+"
 	Minus = "-"
 
-	Star  = "*"
-	Equal = "="
+	Star   = "*"
+	Equals = "="
 
 	At        = "@"
 	Ampersand = "&"
@@ -51,5 +51,14 @@ const (
 	CloseSquareBracket = "]"
 
 	NL  = "\n"
-	Tab = "\t"
+	NL2 = "\n\n"
+	NL3 = "\n\n\n"
+	NL4 = "\n\n\n\n"
+	NL5 = "\n\n\n\n\n"
+
+	Tab  = "\t"
+	Tab2 = "\t\t"
+	Tab3 = "\t\t\t"
+	Tab4 = "\t\t\t\t"
+	Tab5 = "\t\t\t\t\t"
 )

@@ -9,17 +9,38 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type TrxRequester struct {
+type contextKey string
+
+const trxCtxKey contextKey = "ctx.trx"
+
+func IsWithinTx(ctx context.Context) bool {
+	return ctx.Value(trxCtxKey) != nil
+}
+
+// injectTx injects transaction to context
+func injectTx(ctx context.Context, tx *pgxpool.Tx) context.Context {
+	return context.WithValue(ctx, trxCtxKey, tx)
+}
+
+// extractTx extracts transaction from context
+func extractTx(ctx context.Context) *pgxpool.Tx {
+	if tx, ok := ctx.Value(trxCtxKey).(*pgxpool.Tx); ok {
+		return tx
+	}
+	return nil
+}
+
+type PgxTransactor struct {
 	pool *pgxpool.Pool
 }
 
-func ProvideTrxRequester(pool *pgxpool.Pool) *TrxRequester {
-	return &TrxRequester{
+func ProvidePgxTransactor(pool *pgxpool.Pool) *PgxTransactor {
+	return &PgxTransactor{
 		pool: pool,
 	}
 }
 
-func (t TrxRequester) StartEx(ctx context.Context) context.Context {
+func (t PgxTransactor) MustStart(ctx context.Context) context.Context {
 	ctx, err := t.Start(ctx)
 	if err != nil {
 		panic(err)
@@ -27,7 +48,7 @@ func (t TrxRequester) StartEx(ctx context.Context) context.Context {
 	return ctx
 }
 
-func (t TrxRequester) Start(ctx context.Context) (context.Context, error) {
+func (t PgxTransactor) Start(ctx context.Context) (context.Context, error) {
 	trx := extractTx(ctx)
 
 	if trx == nil {
@@ -41,17 +62,17 @@ func (t TrxRequester) Start(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func (t TrxRequester) CloseEx(ctx context.Context, err error) {
+func (t PgxTransactor) MustClose(ctx context.Context, err error) {
 	if err := Close(ctx, err); err != nil {
 		panic(err)
 	}
 }
 
-func (t TrxRequester) Close(ctx context.Context, err error) error {
+func (t PgxTransactor) Close(ctx context.Context, err error) error {
 	return Close(ctx, err)
 }
 
-func (t TrxRequester) Within(
+func (t PgxTransactor) Within(
 	ctx context.Context, in func(context.Context) error,
 ) error {
 
@@ -62,6 +83,7 @@ func (t TrxRequester) Within(
 
 	err = in(injectTx(ctx, trx))
 	if err != nil {
+		// If rollback fails, there's nothing to do, the transaction will expire by itself
 		_ = Rollback(ctx, trx)
 		return err
 	}
@@ -70,7 +92,7 @@ func (t TrxRequester) Within(
 
 }
 
-func (t TrxRequester) acquire(ctx context.Context) (*pgxpool.Tx, error) {
+func (t PgxTransactor) acquire(ctx context.Context) (*pgxpool.Tx, error) {
 	trx, err := t.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -78,7 +100,7 @@ func (t TrxRequester) acquire(ctx context.Context) (*pgxpool.Tx, error) {
 	return trx.(*pgxpool.Tx), nil
 }
 
-func (t TrxRequester) Commit(ctx context.Context) error {
+func (t PgxTransactor) Commit(ctx context.Context) error {
 	trx := extractTx(ctx)
 	if trx != nil {
 		return Commit(ctx, trx)
@@ -86,7 +108,7 @@ func (t TrxRequester) Commit(ctx context.Context) error {
 	return nil
 }
 
-func (t TrxRequester) Rollback(ctx context.Context) error {
+func (t PgxTransactor) Rollback(ctx context.Context) error {
 	trx := extractTx(ctx)
 	if trx != nil {
 		return Rollback(ctx, trx)
@@ -107,7 +129,7 @@ func Close(ctx context.Context, err error) error {
 	return nil
 }
 
-func CloseEx(ctx context.Context, err error) {
+func MustClose(ctx context.Context, err error) {
 	if err = Close(ctx, err); err != nil {
 		panic(err)
 	}
@@ -123,7 +145,7 @@ func Commit(ctx context.Context, trx pgx.Tx) error {
 	return nil
 }
 
-func CommitEx(ctx context.Context, trx pgx.Tx) {
+func MustCommit(ctx context.Context, trx pgx.Tx) {
 	if err := Commit(ctx, trx); err != nil {
 		panic(err)
 	}
@@ -139,7 +161,7 @@ func Rollback(ctx context.Context, trx pgx.Tx) error {
 	return nil
 }
 
-func RollbackEx(ctx context.Context, trx pgx.Tx) {
+func MustRollback(ctx context.Context, trx pgx.Tx) {
 	if err := Rollback(ctx, trx); err != nil {
 		panic(err)
 	}

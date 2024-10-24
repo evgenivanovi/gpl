@@ -1,4 +1,4 @@
-package slices
+package slice
 
 func AppendIf[S ~[]T, T any](slice S, value T, filter bool) S {
 	if filter {

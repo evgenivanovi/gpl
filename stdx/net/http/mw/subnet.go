@@ -12,7 +12,6 @@ import (
 	"github.com/gookit/goutil/strutil"
 )
 
-// Errors
 var (
 	ErrNoIP      = errors.New("no ip present in request")
 	ErrInvalidIP = errors.New("invalid ip")
@@ -26,9 +25,7 @@ type funcExtractor struct {
 	extraction func(request *http.Request) (net.IP, error)
 }
 
-func (ext *funcExtractor) ExtractIP(
-	request *http.Request,
-) (net.IP, error) {
+func (ext *funcExtractor) ExtractIP(request *http.Request) (net.IP, error) {
 	return ext.extraction(request)
 }
 
@@ -43,10 +40,7 @@ func NewIPExtractor(
 // MultiIPExtractor tries IPExtractors in order until one returns a net.IP or an error occurs
 type MultiIPExtractor []IPExtractor
 
-func (ext MultiIPExtractor) ExtractIP(
-	request *http.Request,
-) (net.IP, error) {
-
+func (ext MultiIPExtractor) ExtractIP(request *http.Request) (net.IP, error) {
 	for _, extractor := range ext {
 
 		ip, err := extractor.ExtractIP(request)
@@ -66,7 +60,6 @@ func (ext MultiIPExtractor) ExtractIP(
 	}
 
 	return nil, ErrNoIP
-
 }
 
 type subnet struct {
@@ -102,7 +95,7 @@ func defaultSubnet() *subnet {
 
 func (s *subnet) wrap(next http.Handler) http.Handler {
 
-	mwFunc := func(writer http.ResponseWriter, request *http.Request) {
+	mw := func(writer http.ResponseWriter, request *http.Request) {
 
 		if strutil.IsBlank(s.subnet) {
 			writer.WriteHeader(http.StatusForbidden)
@@ -124,7 +117,7 @@ func (s *subnet) wrap(next http.Handler) http.Handler {
 
 	}
 
-	return http.HandlerFunc(mwFunc)
+	return http.HandlerFunc(mw)
 
 }
 

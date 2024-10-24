@@ -1,9 +1,8 @@
-package slices
+package slice
 
 import "reflect"
 
 func AllSameType(slice []any) (bool, reflect.Type) {
-
 	if len(slice) <= 1 {
 		return true, nil
 	}
@@ -17,5 +16,4 @@ func AllSameType(slice []any) (bool, reflect.Type) {
 	}
 
 	return true, TYPE
-
 }

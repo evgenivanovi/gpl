@@ -25,7 +25,6 @@ type middleware struct {
 }
 
 func NewUnary(ops ...MiddlewareOp) grpc.UnaryServerInterceptor {
-
 	obj := defaultMiddleware()
 
 	for _, op := range ops {
@@ -45,7 +44,6 @@ func NewUnary(ops ...MiddlewareOp) grpc.UnaryServerInterceptor {
 	}
 
 	return obj.wrap()
-
 }
 
 func defaultMiddleware() *middleware {
@@ -62,7 +60,6 @@ func defaultMiddleware() *middleware {
 }
 
 func (mw *middleware) wrap() grpc.UnaryServerInterceptor {
-
 	parser := jwt.NewParser(
 		jwt.WithValidMethods(
 			[]string{
@@ -104,15 +101,16 @@ func (mw *middleware) wrap() grpc.UnaryServerInterceptor {
 		return handler(ctx, req)
 
 	}
-
 }
 
 func withJWTContext(ctx context.Context, token *jwt.Token, tokenString string) context.Context {
 	if token != nil {
 		ctx = jwtx.WithCtx(ctx, token)
 	}
+
 	if tokenString != "" {
 		ctx = jwtx.WithCtxAsString(ctx, tokenString)
 	}
+
 	return ctx
 }

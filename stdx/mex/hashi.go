@@ -27,7 +27,7 @@ func AppendWithoutAfterSuffixFormat(sep string, suffix string) me.ErrorFormatFun
 			if index > 0 {
 				res.WriteString(sep)
 			}
-			res.WriteString(str.RemoveAfter(err.Error(), suffix))
+			res.WriteString(str.TruncateAfter(err.Error(), suffix))
 		}
 		return res.String()
 	}

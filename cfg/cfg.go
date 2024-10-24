@@ -9,6 +9,4 @@ import (
 
 var cfg = koanf.New(std.Dot)
 
-const PropertyNotFoundFormat = "property '%s' not found in sources"
-
-var PropertyNotFoundError = errors.New("property not found in sources")
+var ErrPropertyNotFound = errors.New("property not found in sources")

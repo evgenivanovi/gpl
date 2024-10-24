@@ -52,11 +52,10 @@ func LogCtx(ctx context.Context, spec Specification) {
 }
 
 func LogAttr(spec Specification) slog.Attr {
-	return slog.Any("specification", specModel(spec))
+	return slog.Any("specification", specificationModel(spec))
 }
 
-func specModel(spec Specification) *SpecificationModel {
-
+func specificationModel(spec Specification) *SpecificationModel {
 	if spec == nil {
 		return nil
 	}
@@ -66,7 +65,6 @@ func specModel(spec Specification) *SpecificationModel {
 		SliceConditions:  sliceConditionsModel(spec.SliceConditions()),
 		OrderConditions:  orderConditionsModel(spec.OrderConditions()),
 	}
-
 }
 
 func searchConditionsModel(conditions *SearchConditions) *SearchConditionsModel {

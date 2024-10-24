@@ -1,9 +1,8 @@
 package xsync
 
 import (
+	"errors"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 var ErrQueueChannelClosed = errors.New("channel is closed")

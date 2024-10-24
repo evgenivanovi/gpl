@@ -1,8 +1,6 @@
 package fw
 
 import (
-	"sync"
-
 	"github.com/evgenivanovi/gpl/stdx/xsync"
 )
 
@@ -10,24 +8,22 @@ type Application struct {
 	Settings ServerSettings
 	Context  map[string]any
 
-	onStartExec           xsync.Executor
-	onStartBackgroundExec xsync.Executor
+	onStartTasks           []func()
+	onStartBackgroundTasks []func()
 
-	onCloseWG             *sync.WaitGroup
-	onCloseBackgroundExec xsync.Executor
-	onCloseExec           xsync.Executor
+	onCloseTasks           []func()
+	onCloseBackgroundTasks []func()
 }
 
 func NewApplication() *Application {
 	return &Application{
 		Context: make(map[string]any),
 
-		onStartExec:           xsync.NewParallelExecutor(),
-		onStartBackgroundExec: xsync.NewParallelExecutor(),
+		onStartTasks:           make([]func(), 0),
+		onStartBackgroundTasks: make([]func(), 0),
 
-		onCloseWG:             &sync.WaitGroup{},
-		onCloseBackgroundExec: xsync.NewParallelExecutor(),
-		onCloseExec:           xsync.NewParallelExecutor(),
+		onCloseTasks:           make([]func(), 0),
+		onCloseBackgroundTasks: make([]func(), 0),
 	}
 }
 
@@ -40,33 +36,27 @@ func (a *Application) Get(key string) any {
 }
 
 func (a *Application) RegisterOnStart(task func()) {
-	a.onStartExec.Add(task)
+	a.onStartTasks = append(a.onStartTasks, task)
 }
 
 func (a *Application) RegisterOnStartBackground(task func()) {
-	a.onStartBackgroundExec.Add(task)
+	a.onStartBackgroundTasks = append(a.onStartBackgroundTasks, task)
 }
 
 func (a *Application) Start() {
-	// sync
-	a.onStartExec.Execute()
-	// parallel
-	xsync.GO(a.onStartBackgroundExec.Execute)
-}
-
-func (a *Application) RegisterOnCloseBackground(task func()) {
-	a.onCloseBackgroundExec.Add(task)
+	xsync.ExecuteSequential(a.onStartTasks...)
+	xsync.ExecuteParallel(a.onStartBackgroundTasks...)
 }
 
 func (a *Application) RegisterOnClose(task func()) {
-	a.onCloseExec.Add(task)
+	a.onCloseTasks = append(a.onCloseTasks, task)
+}
+
+func (a *Application) RegisterOnCloseBackground(task func()) {
+	a.onCloseBackgroundTasks = append(a.onCloseBackgroundTasks, task)
 }
 
 func (a *Application) Close() {
-	// parallel
-	xsync.GOWG(a.onCloseBackgroundExec.Execute, a.onCloseWG)
-	// wait
-	a.onCloseWG.Wait()
-	// sync
-	a.onCloseExec.Execute()
+	xsync.ExecuteParallel(a.onCloseBackgroundTasks...)
+	xsync.ExecuteSequential(a.onCloseTasks...)
 }

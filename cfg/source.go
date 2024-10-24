@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/evgenivanovi/gpl/cfg/koanfx"
 	"github.com/evgenivanovi/gpl/std"
 	"github.com/evgenivanovi/gpl/std/conv"
 	"github.com/evgenivanovi/gpl/stdx"
@@ -221,7 +220,7 @@ func NewJSONFileSource(key string, path string) *FileSource {
 			return
 		}
 
-		err := koanfx.ReadFromJSONFile(cfg, path)
+		err := ReadFromJSONFile(cfg, path)
 		if err != nil {
 			slogx.Log().Debug(err.Error())
 		}
@@ -246,7 +245,7 @@ func NewJSONFileSourceWithPath(key string, path func() string) *FileSource {
 			return
 		}
 
-		err := koanfx.ReadFromJSONFile(cfg, path())
+		err := ReadFromJSONFile(cfg, path())
 		if err != nil {
 			slogx.Log().Debug(err.Error())
 		}
@@ -271,7 +270,7 @@ func NewYAMLFileSource(key string, path string) *FileSource {
 			return
 		}
 
-		err := koanfx.ReadFromYAMLFile(cfg, path)
+		err := ReadFromYAMLFile(cfg, path)
 		if err != nil {
 			slogx.Log().Debug(err.Error())
 		}
@@ -296,7 +295,7 @@ func NewYAMLFileSourceWithPath(key string, path func() string) *FileSource {
 			return
 		}
 
-		err := koanfx.ReadFromYAMLFile(cfg, path())
+		err := ReadFromYAMLFile(cfg, path())
 		if err != nil {
 			slogx.Log().Debug(err.Error())
 		}

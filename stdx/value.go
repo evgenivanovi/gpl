@@ -78,11 +78,9 @@ type Value interface {
 	GetStrings() []string
 	MaybeGetStrings() ([]string, error)
 
-	// String Returns the underlying value as a string representation
+	// String returns the underlying value as a string representation
 	String() string
 }
-
-/* __________________________________________________ */
 
 type NilValue struct {
 	err error
@@ -298,8 +296,6 @@ func (v NilValue) Error() error {
 	return v.err
 }
 
-/* __________________________________________________ */
-
 type DefaultValue struct {
 	value  any
 	values []any
@@ -390,7 +386,6 @@ func (v DefaultValue) GetInts() []int {
 }
 
 func (v DefaultValue) MaybeGetInts() ([]int, error) {
-
 	if !v.IsInts() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with int type",
@@ -410,7 +405,6 @@ func (v DefaultValue) MaybeGetInts() ([]int, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsInt64() bool {
@@ -437,7 +431,6 @@ func (v DefaultValue) GetInts64() []int64 {
 }
 
 func (v DefaultValue) MaybeGetInts64() ([]int64, error) {
-
 	if !v.IsInts64() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with int64 type",
@@ -457,7 +450,6 @@ func (v DefaultValue) MaybeGetInts64() ([]int64, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsUint() bool {
@@ -484,7 +476,6 @@ func (v DefaultValue) GetUints() []uint {
 }
 
 func (v DefaultValue) MaybeGetUints() ([]uint, error) {
-
 	if !v.IsUints() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with uint type",
@@ -504,7 +495,6 @@ func (v DefaultValue) MaybeGetUints() ([]uint, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsUint64() bool {
@@ -531,7 +521,6 @@ func (v DefaultValue) GetUints64() []uint64 {
 }
 
 func (v DefaultValue) MaybeGetUints64() ([]uint64, error) {
-
 	if !v.IsUints64() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with uint64 type",
@@ -551,7 +540,6 @@ func (v DefaultValue) MaybeGetUints64() ([]uint64, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsFloat64() bool {
@@ -578,7 +566,6 @@ func (v DefaultValue) GetFloats64() []float64 {
 }
 
 func (v DefaultValue) MaybeGetFloats64() ([]float64, error) {
-
 	if !v.IsFloats64() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with float64 type",
@@ -598,7 +585,6 @@ func (v DefaultValue) MaybeGetFloats64() ([]float64, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsDuration() bool {
@@ -625,7 +611,6 @@ func (v DefaultValue) GetDurations() []time.Duration {
 }
 
 func (v DefaultValue) MaybeGetDurations() ([]time.Duration, error) {
-
 	if !v.IsDurations() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with time.Duration type",
@@ -645,7 +630,6 @@ func (v DefaultValue) MaybeGetDurations() ([]time.Duration, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) IsString() bool {
@@ -671,7 +655,6 @@ func (v DefaultValue) GetStrings() []string {
 }
 
 func (v DefaultValue) MaybeGetStrings() ([]string, error) {
-
 	if !v.IsStrings() {
 		return nil, fmt.Errorf(
 			"values cannot be parsed as slice with string type",
@@ -691,11 +674,9 @@ func (v DefaultValue) MaybeGetStrings() ([]string, error) {
 	}
 
 	return result, nil
-
 }
 
 func (v DefaultValue) String() string {
-
 	if v.IsNil() {
 		return ""
 	}
@@ -709,7 +690,6 @@ func (v DefaultValue) String() string {
 	}
 
 	return ""
-
 }
 
 func (v DefaultValue) stringForSingle() string {
@@ -727,7 +707,6 @@ func (v DefaultValue) stringForSingle() string {
 }
 
 func (v DefaultValue) stringForMultiple() string {
-
 	if v.IsNil() {
 		return ""
 	}
@@ -737,10 +716,7 @@ func (v DefaultValue) stringForMultiple() string {
 	}
 
 	return ""
-
 }
-
-/* __________________________________________________ */
 
 // NewValue creates a new instance of NewValue
 func NewValue(value interface{}) Value {
@@ -920,8 +896,6 @@ func NewValue(value interface{}) Value {
 
 }
 
-/* __________________________________________________ */
-
 func ValueTypeName(value Value) string {
 	if def, ok := value.(DefaultValue); ok {
 		if def.value != nil {
@@ -930,8 +904,10 @@ func ValueTypeName(value Value) string {
 			return reflect.TypeOf(def.values[0]).Name()
 		}
 	}
+
 	if _, ok := value.(NilValue); ok {
 		return std.Nil
 	}
+
 	return std.Empty
 }

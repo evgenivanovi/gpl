@@ -6,14 +6,15 @@ import (
 )
 
 type SingleInFlight struct {
-	mutex atomic.Value
+	mutex *atomic.Value
 }
 
 func NewSingleInFlight() SingleInFlight {
 	var mutex atomic.Value
 	mutex.Store(new(sync.Once))
+
 	return SingleInFlight{
-		mutex: mutex,
+		mutex: &mutex,
 	}
 }
 

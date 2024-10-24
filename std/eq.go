@@ -1,4 +1,4 @@
-package cmp
+package std
 
 type Equaler interface {
 	Equal(other any) bool
@@ -13,7 +13,6 @@ func NotEqual(first Equaler, second Equaler) bool {
 }
 
 func EqualAll[T Equaler](first []T, second []T) bool {
-
 	if len(first) != len(second) {
 		return false
 	}
@@ -25,7 +24,6 @@ func EqualAll[T Equaler](first []T, second []T) bool {
 	}
 
 	return true
-
 }
 
 func NotEqualAll[T Equaler](first []T, second []T) bool {

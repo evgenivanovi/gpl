@@ -11,12 +11,12 @@ import (
 
 var level zap.AtomicLevel
 var logger *zap.Logger
-var sugarLogger *zap.SugaredLogger
+var sugar *zap.SugaredLogger
 
 func init() {
 	level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	logger = NewZap(level)
-	sugarLogger = logger.Sugar()
+	sugar = logger.Sugar()
 }
 
 func Log() *zap.Logger {
@@ -24,7 +24,7 @@ func Log() *zap.Logger {
 }
 
 func SugarLog() *zap.SugaredLogger {
-	return sugarLogger
+	return sugar
 }
 
 func Level() zapcore.Level {
@@ -33,12 +33,12 @@ func Level() zapcore.Level {
 
 func SetLog(new *zap.Logger) {
 	logger = new
-	sugarLogger = logger.Sugar()
+	sugar = logger.Sugar()
 }
 
 func SetSugar(new *zap.SugaredLogger) {
-	sugarLogger = new
-	logger = sugarLogger.Desugar()
+	sugar = new
+	logger = sugar.Desugar()
 }
 
 func SetLevel(new zapcore.Level) {
@@ -49,7 +49,6 @@ func NewZap(
 	lvl zapcore.LevelEnabler,
 	ops ...zap.Option,
 ) *zap.Logger {
-
 	if lvl == nil {
 		lvl = level
 	}
@@ -59,14 +58,12 @@ func NewZap(
 	core := zapcore.NewCore(encoder, os.Stdout, level)
 
 	return zap.New(core, ops...)
-
 }
 
 func LogAsStructured(log zap.Logger) *slog.Logger {
 	return slog.New(
 		zapslog.NewHandler(
 			log.Core(),
-			nil,
 		),
 	)
 }
@@ -75,7 +72,6 @@ func SugarLogAsStructured(log zap.SugaredLogger) *slog.Logger {
 	return slog.New(
 		zapslog.NewHandler(
 			log.Desugar().Core(),
-			nil,
 		),
 	)
 }

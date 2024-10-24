@@ -13,14 +13,14 @@ var durationPointerType = reflect.TypeOf(ptr.Duration(time.Duration(0)))
 var timeType = reflect.TypeOf(time.Time{})
 var timePointerType = reflect.TypeOf(&time.Time{})
 
-func IsDuration(value interface{}) bool {
+func IsDuration(value any) bool {
 	_, ok := value.(time.Duration)
 	return ok
 }
 
 func IsDurationValue(value reflect.Value) bool {
-	vt := value.Type()
-	return IsDurationType(vt)
+	typ := value.Type()
+	return IsDurationType(typ)
 }
 
 func IsDurationType(value reflect.Type) bool {
@@ -31,14 +31,14 @@ func IsDurationPointerType(value reflect.Type) bool {
 	return value == durationPointerType
 }
 
-func IsTime(value interface{}) bool {
+func IsTime(value any) bool {
 	_, ok := value.(time.Time)
 	return ok
 }
 
 func IsTimeValue(value reflect.Value) bool {
-	vt := value.Type()
-	return IsTimeType(vt) || IsTimePointerType(vt)
+	typ := value.Type()
+	return IsTimeType(typ) || IsTimePointerType(typ)
 }
 
 func IsTimeType(value reflect.Type) bool {

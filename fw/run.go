@@ -98,7 +98,7 @@ func RunServer(cfg *Configuration) error {
 
 func startup(
 	app *Application,
-	startCh chan error,
+	errs chan error,
 	httpServer *http.Server,
 	httpsServer *http.Server,
 	grpcServer *grpcfw.GRPCServer,
@@ -109,7 +109,7 @@ func startup(
 	if app.Settings.httpEnabled && httpServer != nil {
 		go startHttpServer(
 			app,
-			startCh,
+			errs,
 			httpServer,
 		)
 	}
@@ -117,7 +117,7 @@ func startup(
 	if app.Settings.httpsEnabled && httpsServer != nil {
 		go startHttpsServer(
 			app,
-			startCh,
+			errs,
 			httpsServer,
 		)
 	}
@@ -125,7 +125,7 @@ func startup(
 	if app.Settings.grpcEnabled && grpcServer != nil {
 		go startGrpcServer(
 			app,
-			startCh,
+			errs,
 			grpcServer,
 		)
 	}
@@ -134,7 +134,7 @@ func startup(
 
 func startHttpServer(
 	app *Application,
-	startCh chan error,
+	errs chan error,
 	server *http.Server,
 ) {
 
@@ -153,7 +153,7 @@ func startHttpServer(
 	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
 	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
 	if !errors.Is(err, http.ErrServerClosed) {
-		startCh <- err
+		errs <- err
 		return
 	}
 
@@ -161,7 +161,7 @@ func startHttpServer(
 
 func startHttpsServer(
 	app *Application,
-	startCh chan error,
+	errs chan error,
 	server *http.Server,
 ) {
 
@@ -183,7 +183,7 @@ func startHttpsServer(
 	// So if we see this error, it is actually a good thing and an indication that the graceful executor has started.
 	// So we check specifically for this, only returning the error if it is NOT http.ErrServerClosed.
 	if !errors.Is(err, http.ErrServerClosed) {
-		startCh <- err
+		errs <- err
 		return
 	}
 
@@ -191,7 +191,7 @@ func startHttpsServer(
 
 func startGrpcServer(
 	app *Application,
-	startCh chan error,
+	errs chan error,
 	server *grpcfw.GRPCServer,
 ) {
 
@@ -203,13 +203,13 @@ func startGrpcServer(
 		"gRPC server has been run on address: '" + app.Settings.GrpcAddress() + "'",
 	)
 
-	server.StartChannable(startCh)
+	server.StartChannable(errs)
 
 }
 
 func shutdown(
 	app *Application,
-	shutdownCh chan error,
+	errs chan error,
 	httpServer *http.Server,
 	httpsServer *http.Server,
 	grpcServer *grpcfw.GRPCServer,
@@ -231,19 +231,19 @@ func shutdown(
 		grpcServers = append(grpcServers, grpcServer)
 	}
 
-	doShutdown(app, shutdownCh, grpcServers, httpServers)
+	doShutdown(app, errs, grpcServers, httpServers)
 
 }
 
 func doShutdown(
 	app *Application,
-	shutdownCh chan error,
+	errs chan error,
 	grpcServers []*grpcfw.GRPCServer,
 	httpServers []*http.Server,
 ) {
 
-	// Create a quitChannel channel which carries os.Signal values.
-	quitChannel := make(chan os.Signal, 1)
+	// Create a quit channel which carries os.Signal values.
+	quit := make(chan os.Signal, 1)
 
 	// Use signal.Notify() to listen for incoming syscall.SIGINT and syscall.SIGTERM signals and
 	// relay them to the quitChannel channel.
@@ -254,11 +254,11 @@ func doShutdown(
 	// (and will always cause the application to terminate immediately),
 	// and we’ll leave SIGQUIT with its default behavior
 	// (as it’s handy if you want to execute a non-graceful shutdown via a keyboard shortcut).
-	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Read the signal from the quitChannel channel.
 	// This code will block until a signal is received.
-	sig := <-quitChannel
+	sig := <-quit
 
 	// Log a message to say that the signal has been caught.
 	// Notice that we also call the String() method on the signal to get the signal name and
@@ -280,7 +280,7 @@ func doShutdown(
 	for _, server := range httpServers {
 		err := server.Shutdown(ctx)
 		if err != nil {
-			shutdownCh <- err
+			errs <- err
 		}
 	}
 
@@ -293,6 +293,6 @@ func doShutdown(
 
 	// Then we return nil on the shutdownError channel,
 	// to indicate that the executor was completed without any issues.
-	shutdownCh <- nil
+	errs <- nil
 
 }
