@@ -1,4 +1,4 @@
-package slices
+package slice
 
 import (
 	"slices"
@@ -15,7 +15,6 @@ func Filter[S ~[]T, T any](slice S, filter func(T) bool) S {
 
 // Reduce is like Filter, but modifies original slice.
 func Reduce[S ~[]T, T any](slice S, filter func(T) bool) S {
-
 	if len(slice) == 0 {
 		return slice
 	}
@@ -29,5 +28,4 @@ func Reduce[S ~[]T, T any](slice S, filter func(T) bool) S {
 	}
 
 	return slice[:index]
-
 }

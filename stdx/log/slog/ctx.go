@@ -12,15 +12,11 @@ const ctxKey contextKey = "ctx.log.slog"
 // FromCtx
 // Takes a context.Context and returns the zap.Logger associated with it (if any).
 func FromCtx(ctx context.Context) *slog.Logger {
-
 	value, ok := ctx.Value(ctxKey).(*slog.Logger)
-
 	if ok && value != nil {
 		return value
 	}
-
 	return logger
-
 }
 
 // WithCtx

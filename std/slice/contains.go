@@ -1,22 +1,20 @@
-package slices
+package slice
 
 // ContainsAll checks if slice of type E contains all elements of given slice, order independent.
 func ContainsAll[E comparable](in []E, need []E) bool {
-
-	inMap := make(map[E]struct{}, len(in))
+	set := make(map[E]struct{}, len(in))
 
 	for _, key := range in {
-		inMap[key] = struct{}{}
+		set[key] = struct{}{}
 	}
 
 	for _, key := range need {
-		if _, ok := inMap[key]; !ok {
+		if _, ok := set[key]; !ok {
 			return false
 		}
 	}
 
 	return true
-
 }
 
 // ContainsSame checks if slice of type E contains non-unique elements.
@@ -36,7 +34,5 @@ func ContainsAny[E comparable](in []E, need []E) bool {
 
 // ContainsOne checks if slice of type E contains given element.
 func ContainsOne[E comparable](in []E, need E) bool {
-	needSlice := make([]E, 1)
-	needSlice = append(needSlice, need)
-	return ContainsAny(in, needSlice)
+	return ContainsAny(in, append([]E{}, need))
 }

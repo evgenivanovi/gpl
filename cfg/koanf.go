@@ -1,4 +1,4 @@
-package koanfx
+package cfg
 
 import (
 	"fmt"

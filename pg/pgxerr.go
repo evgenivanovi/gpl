@@ -7,7 +7,6 @@ import (
 )
 
 func TranslateReadError(err error) error {
-
 	if err == nil {
 		return nil
 	}
@@ -17,7 +16,6 @@ func TranslateReadError(err error) error {
 	}
 
 	return NewErrorWithCodeMessage(ErrorInternalCode, err.Error())
-
 }
 
 func TranslateReadErrorFunc() func(error) error {
@@ -27,7 +25,6 @@ func TranslateReadErrorFunc() func(error) error {
 }
 
 func TranslateWriteError(err error) error {
-
 	if err == nil {
 		return nil
 	}
@@ -42,7 +39,6 @@ func TranslateWriteError(err error) error {
 	}
 
 	return NewErrorWithCodeMessage(ErrorInternalCode, err.Error())
-
 }
 
 func TranslateWriteErrorFunc() func(error) error {

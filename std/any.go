@@ -10,41 +10,38 @@ import (
 )
 
 func IsBoolean(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.Bool
-
+	return typ.Kind() == reflect.Bool
 }
 
 func CastToBoolean(obj interface{}) (bool, bool) {
-
 	if goutil.IsNil(obj) {
 		return false, false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.Bool {
+	if typ.Kind() == reflect.Bool {
 
-		if value, ok := obj.(*bool); ok {
-			return *value, true
+		if val, ok := obj.(*bool); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(bool); ok {
-			return value, true
+		if val, ok := obj.(bool); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to bool"))
@@ -52,45 +49,41 @@ func CastToBoolean(obj interface{}) (bool, bool) {
 	}
 
 	return false, false
-
 }
 
 func IsString(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.String
-
+	return typ.Kind() == reflect.String
 }
 
 func CastToString(obj interface{}) (string, bool) {
-
 	if goutil.IsNil(obj) {
 		return Empty, false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.String {
+	if typ.Kind() == reflect.String {
 
-		if value, ok := obj.(*string); ok {
-			return *value, true
+		if val, ok := obj.(*string); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(string); ok {
-			return value, true
+		if val, ok := obj.(string); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to string"))
@@ -98,45 +91,41 @@ func CastToString(obj interface{}) (string, bool) {
 	}
 
 	return Empty, false
-
 }
 
 func IsInt32(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.Int32
-
+	return typ.Kind() == reflect.Int32
 }
 
 func CastToInt32(obj interface{}) (int32, bool) {
-
 	if goutil.IsNil(obj) {
 		return MinusOneI, false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.Int32 {
+	if typ.Kind() == reflect.Int32 {
 
-		if value, ok := obj.(*int32); ok {
-			return *value, true
+		if val, ok := obj.(*int32); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(int32); ok {
-			return value, true
+		if val, ok := obj.(int32); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to int32"))
@@ -144,45 +133,41 @@ func CastToInt32(obj interface{}) (int32, bool) {
 	}
 
 	return MinusOneI, false
-
 }
 
 func IsInt64(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.Int64
-
+	return typ.Kind() == reflect.Int64
 }
 
 func CastToInt64(obj interface{}) (int64, bool) {
-
 	if goutil.IsNil(obj) {
 		return MinusOneL, false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.Int64 {
+	if typ.Kind() == reflect.Int64 {
 
-		if value, ok := obj.(*int64); ok {
-			return *value, true
+		if val, ok := obj.(*int64); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(int64); ok {
-			return value, true
+		if val, ok := obj.(int64); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to int64"))
@@ -190,45 +175,41 @@ func CastToInt64(obj interface{}) (int64, bool) {
 	}
 
 	return MinusOneL, false
-
 }
 
 func IsUint64(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.Uint64
-
+	return typ.Kind() == reflect.Uint64
 }
 
 func CastToUint64(obj interface{}) (uint64, bool) {
-
 	if goutil.IsNil(obj) {
 		return uint64(Zero), false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.Uint64 {
+	if typ.Kind() == reflect.Uint64 {
 
-		if value, ok := obj.(*uint64); ok {
-			return *value, true
+		if val, ok := obj.(*uint64); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(uint64); ok {
-			return value, true
+		if val, ok := obj.(uint64); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to uint64"))
@@ -236,45 +217,41 @@ func CastToUint64(obj interface{}) (uint64, bool) {
 	}
 
 	return uint64(Zero), false
-
 }
 
 func IsFloat64(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return objType.Kind() == reflect.Float64
-
+	return typ.Kind() == reflect.Float64
 }
 
 func CastToFloat64(obj interface{}) (float64, bool) {
-
 	if goutil.IsNil(obj) {
 		return float64(MinusOne), false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if objType.Kind() == reflect.Float64 {
+	if typ.Kind() == reflect.Float64 {
 
-		if value, ok := obj.(*float64); ok {
-			return *value, true
+		if val, ok := obj.(*float64); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(float64); ok {
-			return value, true
+		if val, ok := obj.(float64); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to float64"))
@@ -282,45 +259,41 @@ func CastToFloat64(obj interface{}) (float64, bool) {
 	}
 
 	return float64(MinusOne), false
-
 }
 
 func IsDuration(obj interface{}) bool {
-
 	if goutil.IsNil(obj) {
 		return false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	return ref.IsDurationType(objType)
-
+	return ref.IsDurationType(typ)
 }
 
 func CastToDuration(obj interface{}) (time.Duration, bool) {
-
 	if goutil.IsNil(obj) {
 		return time.Duration(Zero), false
 	}
 
-	objType := reflect.TypeOf(obj)
+	typ := reflect.TypeOf(obj)
 
-	if objType.Kind() == reflect.Ptr {
-		objType = objType.Elem()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
 
-	if ref.IsDurationType(objType) {
+	if ref.IsDurationType(typ) {
 
-		if value, ok := obj.(*time.Duration); ok {
-			return *value, true
+		if val, ok := obj.(*time.Duration); ok {
+			return *val, true
 		}
 
-		if value, ok := obj.(time.Duration); ok {
-			return value, true
+		if val, ok := obj.(time.Duration); ok {
+			return val, true
 		}
 
 		panic(fmt.Errorf("unable to cast object to time.Duration"))
@@ -328,5 +301,4 @@ func CastToDuration(obj interface{}) (time.Duration, bool) {
 	}
 
 	return time.Duration(Zero), false
-
 }

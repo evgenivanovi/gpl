@@ -78,11 +78,6 @@ func visitEqualsCondition(
 			return col.EQ(postgres.Int64(value))
 		}
 
-		if condition.Value().IsUint64() {
-			value := condition.Value().GetUint64()
-			return col.EQ(postgres.Uint64(value))
-		}
-
 	}
 
 	panic("Invalid invocation of method or invalid parameters.")
@@ -135,11 +130,6 @@ func visitIsNotEqualsCondition(
 			return col.NOT_EQ(postgres.Int64(value))
 		}
 
-		if condition.Value().IsUint64() {
-			value := condition.Value().GetUint64()
-			return col.NOT_EQ(postgres.Uint64(value))
-		}
-
 	}
 
 	panic("Invalid invocation of method or invalid parameters.")
@@ -184,16 +174,6 @@ func visitContainsAnyCondition(
 			return col.IN(exp...)
 		}
 
-		if condition.Value().IsUints64() {
-			values := condition.Value().GetUints64()
-
-			exp := make([]postgres.Expression, 0)
-			for _, value := range values {
-				exp = append(exp, postgres.Uint64(value))
-			}
-			return col.IN(exp...)
-		}
-
 	}
 
 	panic("Invalid invocation of method or invalid parameters.")
@@ -234,16 +214,6 @@ func visitNotContainsAllCondition(
 			exp := make([]postgres.Expression, 0)
 			for _, value := range values {
 				exp = append(exp, postgres.Int64(value))
-			}
-			return col.NOT_IN(exp...)
-		}
-
-		if condition.Value().IsUints64() {
-			values := condition.Value().GetUints64()
-
-			exp := make([]postgres.Expression, 0)
-			for _, value := range values {
-				exp = append(exp, postgres.Uint64(value))
 			}
 			return col.NOT_IN(exp...)
 		}

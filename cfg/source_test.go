@@ -17,19 +17,19 @@ func TestJSONFileSource(t *testing.T) {
 	cfg := NewJSONFileSource("type", ConfigJSON)
 
 	if actual, _ := cfg.Get(); actual != expected {
-		t.Errorf("Get() = '%v', want '%v'", actual, expected)
+		t.Errorf("Got() = '%v', want '%v'", actual, expected)
 	}
 
 }
 
-func TestJSONYAMLSource(t *testing.T) {
+func TestYAMLFileSource(t *testing.T) {
 
 	expected := "yaml"
 
 	cfg := NewYAMLFileSource("type", ConfigYAML)
 
 	if actual, _ := cfg.Get(); actual != expected {
-		t.Errorf("Get() = '%v', want '%v'", actual, expected)
+		t.Errorf("Got() = '%v', want '%v'", actual, expected)
 	}
 
 }

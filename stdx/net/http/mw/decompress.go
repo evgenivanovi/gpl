@@ -20,7 +20,7 @@ var requestHeadersToDrop = []string{
 
 func WithDecompress(next http.Handler) http.Handler {
 
-	decompressFn := func(writer http.ResponseWriter, request *http.Request) {
+	decompress := func(writer http.ResponseWriter, request *http.Request) {
 
 		var readerCloser io.ReadCloser
 
@@ -30,8 +30,7 @@ func WithDecompress(next http.Handler) http.Handler {
 			if err == nil {
 				readerCloser = reader
 			} else {
-				errorReader := iox.NewOnErrorReader(err)
-				readerCloser = io.NopCloser(errorReader)
+				readerCloser = io.NopCloser(iox.NewOnErrorReader(err))
 			}
 		}
 
@@ -49,6 +48,6 @@ func WithDecompress(next http.Handler) http.Handler {
 
 	}
 
-	return http.HandlerFunc(decompressFn)
+	return http.HandlerFunc(decompress)
 
 }

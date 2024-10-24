@@ -1,14 +1,17 @@
 package xsync
 
-import "sync"
+import (
+	"sync"
+)
 
 type Semaphore struct {
 	channel chan struct{}
-	once    sync.Once
+	once    *sync.Once
 }
 
 func NewSemaphore(max int) *Semaphore {
 	return &Semaphore{
+		once:    new(sync.Once),
 		channel: make(chan struct{}, max),
 	}
 }

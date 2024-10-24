@@ -6,60 +6,41 @@ import (
 	"github.com/evgenivanovi/gpl/std"
 )
 
+// Join concatenates the first string with any additional strings provided.
 func Join(first string, others ...string) string {
-	result := first
-	for _, val := range others {
-		result += val
-	}
-	return result
+	return JoinWithSep(first, std.Empty, others...)
 }
 
+// JoinWithSep concatenates the first string with any additional strings provided,
+// Uses specified separator between each string.
 func JoinWithSep(first string, sep string, others ...string) string {
-	result := first
-	for _, val := range others {
-		result += sep
-		result += val
+	result := strings.Builder{}
+	result.WriteString(first)
+
+	for ind := range others {
+		if result.Len() > std.Zero {
+			result.WriteString(sep)
+		}
+		result.WriteString(others[ind])
 	}
-	return result
+
+	return result.String()
 }
 
 func RemoveFirst(value string, sub string) string {
-	return strings.Replace(value, sub, std.Empty, 1)
+	return strings.Replace(value, sub, std.Empty, std.One)
 }
 
 func RemoveAll(value string, sub string) string {
-	return strings.Replace(value, sub, std.Empty, -1)
+	return strings.Replace(value, sub, std.Empty, std.MinusOne)
 }
 
-func RemoveAfter(
-	input string,
-	delimiter string,
-) string {
-	return RemoveAfterWithMissing(
-		input, delimiter, input,
-	)
-}
-
-func RemoveAfterWithMissing(
-	input string,
-	delimiter string,
-	missingDelimiterValue string,
-) string {
-
-	if len(input) == 0 {
-		return input
+// TruncateAfter returns substring of `value`
+// that appears before the first occurrence of `delimiter`.
+// If `delimiter` was not found or empty, `value` is returned unchanged.
+func TruncateAfter(value string, delimiter string) string {
+	if len(value) == 0 || len(delimiter) == 0 {
+		return value
 	}
-
-	parts := strings.SplitN(input, delimiter, 2)
-
-	if len(parts) == 1 {
-		return missingDelimiterValue
-	}
-
-	res := strings.Builder{}
-	res.WriteString(parts[0])
-	res.WriteString(parts[1][len(parts[1]):])
-
-	return res.String()
-
+	return strings.SplitN(value, delimiter, 2)[0]
 }

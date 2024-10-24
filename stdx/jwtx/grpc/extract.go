@@ -54,7 +54,6 @@ func (e MetadataExtractor) String() string {
 }
 
 func (e MetadataExtractor) ExtractToken(ctx context.Context) (string, error) {
-
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", request.ErrNoTokenInRequest
@@ -71,16 +70,13 @@ func (e MetadataExtractor) ExtractToken(ctx context.Context) (string, error) {
 	}
 
 	return value, nil
-
 }
 
 type GenerateExtractor struct {
 	generate func() (string, error)
 }
 
-func NewGenerateExtractor(
-	generate func() (string, error),
-) GenerateExtractor {
+func NewGenerateExtractor(generate func() (string, error)) GenerateExtractor {
 	return GenerateExtractor{
 		generate: generate,
 	}

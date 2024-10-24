@@ -19,7 +19,7 @@ func (p *Property) Name() string {
 func (p *Property) Calc(
 	calc func(sources []Source) string,
 ) string {
-	defer p.recover()
+	defer p.catch()
 	return calc(p.sources)
 }
 
@@ -34,7 +34,7 @@ func (p *Property) CalcFn(
 func (p *Property) CalcValue(
 	calc func(sources []Source) stdx.Value,
 ) stdx.Value {
-	defer p.recover()
+	defer p.catch()
 	return calc(p.sources)
 }
 
@@ -50,8 +50,8 @@ func (p *Property) CalcElse(
 	calc func(sources []Source) (string, error),
 ) (string, error) {
 	result, err := calc(p.sources)
-	if err != nil && errors.Is(err, PropertyNotFoundError) {
-		msg := fmt.Sprintf(PropertyNotFoundFormat, p.name)
+	if err != nil && errors.Is(err, ErrPropertyNotFound) {
+		msg := fmt.Sprintf("property '%s' not found in sources", p.name)
 		return "", errors.New(msg)
 	}
 	return result, nil
@@ -77,10 +77,10 @@ func (p *Property) BindAll(
 	p.sources = append(p.sources, sources...)
 }
 
-func (p *Property) recover() {
+func (p *Property) catch() {
 	if result := recover(); result != nil {
 		if err, ok := result.(error); ok {
-			if errors.Is(err, PropertyNotFoundError) {
+			if errors.Is(err, ErrPropertyNotFound) {
 				msg := fmt.Sprintf("property '%s' not found in sources", p.name)
 				panic(msg)
 			}

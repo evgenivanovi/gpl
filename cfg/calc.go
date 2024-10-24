@@ -108,7 +108,7 @@ func FirstStringNotEmptyElse() func(sources []Source) (string, error) {
 				return value, nil
 			}
 		}
-		return result, PropertyNotFoundError
+		return result, ErrPropertyNotFound
 	}
 }
 
@@ -119,6 +119,6 @@ func FirstStringNotEmptyThrow() func(sources []Source) string {
 				return value
 			}
 		}
-		panic(PropertyNotFoundError)
+		panic(ErrPropertyNotFound)
 	}
 }

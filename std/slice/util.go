@@ -1,4 +1,4 @@
-package slices
+package slice
 
 func IsEmpty[E any](slice []E) bool {
 	return len(slice) == 0
